@@ -1,0 +1,12 @@
+# Local secrets and runtime data
+**/.env
+**/.env.*
+!**/.env.example
+**/data/
+**/*.sqlite
+**/*.sqlite-*
+**/*.db
+**/*.db-*
+**/node_modules/
+**/dist/
+**/tsconfig.tsbuildinfo
