@@ -8,7 +8,7 @@ import {
   indiaDate,
   tomorrow,
   type PlaceId,
-  type Ride,
+  type OfferInput,
   type RideType,
 } from "@/lib/commute";
 import PlaceSelect from "./place-select";
@@ -16,7 +16,7 @@ export default function OfferForm({
   submit,
   close,
 }: {
-  submit: (ride: Ride) => boolean;
+  submit: (ride: OfferInput) => Promise<boolean>;
   close: () => void;
 }) {
   const [origin, setOrigin] = useState("campus"),
@@ -24,10 +24,15 @@ export default function OfferForm({
     [type, setType] = useState<RideType>("carpool"),
     [capacity, setCapacity] = useState(4);
   const max = type === "bike" ? 2 : type === "cab" ? 7 : 5;
-  function offer(e: FormEvent<HTMLFormElement>) {
+  const [submitting, setSubmitting] = useState(false);
+  const [repeat, setRepeat] = useState(false),
+    [weekdays, setWeekdays] = useState([1, 2, 3, 4, 5]);
+  async function offer(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     const form = new FormData(e.currentTarget);
-    const ride: Ride = {
+    const ride: OfferInput = {
       id: crypto.randomUUID(),
       ownerId: DEMO_USER,
       host: "You",
@@ -47,8 +52,15 @@ export default function OfferForm({
       note: String(form.get("note")).trim(),
       sample: false,
       status: "open",
+      ...(repeat
+        ? { recurring: { weekdays, endDate: String(form.get("endDate")) } }
+        : {}),
     };
-    if (submit(ride)) close();
+    try {
+      if (await submit(ride)) close();
+    } finally {
+      setSubmitting(false);
+    }
   }
   return (
     <form onSubmit={offer} className="offer-form">
@@ -152,14 +164,64 @@ export default function OfferForm({
           rows={2}
         />
       </label>
+      <div className="repeat-options">
+        <label className="check-label">
+          <input
+            type="checkbox"
+            checked={repeat}
+            onChange={(e) => setRepeat(e.target.checked)}
+          />
+          <span>Repeat this commute on weekdays</span>
+        </label>
+        {repeat && (
+          <>
+            <div className="weekday-options">
+              {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day, i) => (
+                <label key={day}>
+                  <input
+                    type="checkbox"
+                    checked={weekdays.includes(i + 1)}
+                    onChange={(e) =>
+                      setWeekdays((days) =>
+                        e.target.checked
+                          ? [...days, i + 1]
+                          : days.filter((d) => d !== i + 1),
+                      )
+                    }
+                  />
+                  {day}
+                </label>
+              ))}
+            </div>
+            <label className="field">
+              <span>Repeat until</span>
+              <input
+                type="date"
+                name="endDate"
+                min={tomorrow()}
+                defaultValue={indiaDate(new Date(Date.now() + 14 * 86400000))}
+                required
+              />
+            </label>
+            <small>
+              Uses the same departure time in IST. Each selected day gets its
+              own seats and bookings. Stop the schedule from My rides.
+            </small>
+          </>
+        )}
+      </div>
       <p className="inline-note">
         <Info size={16} />
-        This demo offer is saved on this device. No real passengers will be
-        notified.
+        Your offer will be available to other signed-in campus members on this
+        local server.
       </p>
-      <button className="button primary full" type="submit">
+      <button
+        className="button primary full"
+        type="submit"
+        disabled={submitting}
+      >
         <Plus size={18} />
-        Post ride offer
+        {submitting ? "Posting…" : "Post ride offer"}
       </button>
     </form>
   );

@@ -29,3 +29,17 @@ Reference: https://quickride.in/ — studied through the actual browser, includi
 
 No credentials or student PRNs belong in these handoff files.
 
+
+## Project presentation
+
+The presentation is in presentations/ShareCommute_Project_Overview.pptx. Read sharecommute/docs/PRESENTATION.md for its scope and sources.
+
+
+## Current sharing preference
+
+The user authorised a public GitHub source repository on 16 October 2026. The website continues to run locally. Follow the current PROJECT_STATUS.md and repository README for setup; older Sites deployment suggestions are superseded.
+
+
+## Public source repository
+
+GitHub: https://github.com/samyak163/sharecommute. See the repository README for installation and local booking instructions. The website runs locally; GitHub stores the source and final presentation. Never publish .env, API keys, databases or local authentication secrets.

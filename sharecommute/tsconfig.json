@@ -29,19 +29,26 @@
     },
     "types": [
       "node",
-      "@cloudflare/workers-types"
-    ]
+      "vite/client"
+    ],
+    "allowImportingTsExtensions": true
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "components/**/*.tsx",
+    "hooks/**/*.ts",
+    "lib/commute.ts",
+    "lib/demo-repository.ts",
+    "lib/api.ts",
+    "lib/utils.ts",
+    "server/**/*.ts",
+    "vite.config.ts"
   ],
   "exclude": [
     "node_modules",
-    "examples"
+    "examples",
+    "build",
+    "app/chatgpt-auth.ts"
   ]
 }

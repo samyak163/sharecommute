@@ -76,6 +76,9 @@ export type Ride = {
   note: string;
   status: "open" | "cancelled";
   sample: boolean;
+  templateId?: string;
+  hostEmail?: string;
+  passengers?: { name: string; email: string; seats: number }[];
 };
 export type Booking = {
   id: string;
@@ -84,8 +87,28 @@ export type Booking = {
   seats: number;
   status: "confirmed" | "cancelled";
   createdAt: string;
+  /** Authoritative allocation supplied by the shared server. */
+  sharePaise?: number;
 };
-export type CommuteState = { version: 1; rides: Ride[]; bookings: Booking[] };
+export type RecurringSchedule = {
+  id: string;
+  origin: PlaceId;
+  destination: PlaceId;
+  weekdays: number[];
+  localTime: string;
+  startDate: string;
+  endDate: string;
+  active: boolean;
+};
+export type OfferInput = Ride & {
+  recurring?: { weekdays: number[]; endDate: string };
+};
+export type CommuteState = {
+  version: 1;
+  rides: Ride[];
+  bookings: Booking[];
+  schedules?: RecurringSchedule[];
+};
 export type Search = {
   origin: string;
   destination: string;
@@ -167,6 +190,7 @@ export function bookingShare(
   ride: Ride,
   booking: Booking,
 ) {
+  if (booking.sharePaise !== undefined) return booking.sharePaise;
   const active = state.bookings.filter(
     (b) => b.rideId === ride.id && b.status === "confirmed",
   );
@@ -187,13 +211,14 @@ export function findRides(
   state: CommuteState,
   search: Search,
   now = Date.now(),
+  userId = DEMO_USER,
 ) {
   const target = new Date(departureAt(search.date, search.time)).getTime();
   return state.rides.filter(
     (r) =>
       r.status === "open" &&
       new Date(r.departure).getTime() > now &&
-      r.ownerId !== DEMO_USER &&
+      r.ownerId !== userId &&
       (!search.origin || r.origin === search.origin) &&
       (!search.destination || r.destination === search.destination) &&
       indiaDate(new Date(r.departure)) === search.date &&

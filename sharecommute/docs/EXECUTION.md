@@ -1,58 +1,60 @@
 # ShareCommute execution guide
 
-## Start or continue
+Requires Node.js 24 or newer. Run commands from `sharecommute/`.
 
-Read the root START_HERE.md and PROJECT_STATUS.md before making changes. Inspect the actual source and Git state; documents do not override code evidence. Preserve working code and use the next unfinished task from PLAN.md.
+## Start
 
-## Local commands
-
-From `C:\Users\Lenovo\Desktop\pbl\sharecommute`, with Node 22.13 or newer:
-
-```powershell
-npm install
+```sh
+npm ci
 npm run dev
-npm run typecheck
+```
+
+Copy `.env.example` to `.env` to configure the local environment. The default mail mode is development, so no email leaves the computer. The frontend normally uses port 5173 and the API uses 3001. To choose another frontend port, use `npm run dev -- 5174`.
+
+## Checks and compiled mode
+
+```sh
 npm test
+npm run typecheck
 npm run build
+npm start
 ```
 
-The development URL is printed by the server; the current starter defaults to port 5173. Keep the server alive while reviewing. Do not scan for arbitrary ports. If npm's Windows launcher is broken, invoke its installed CLI directly with Node; this was necessary during initial setup and the Sites build helper:
+After building, the single Node server serves the compiled interface and API on port 3001. Stop the development server first if its API already uses that port.
 
-```powershell
-& 'C:\Program Files\nodejs\node.exe' 'C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js' run dev
+## Sample data and administration
+
+```sh
+npm run seed:samples
+npm run admin -- grant your-address@mitwpu.edu.in
+npm run admin -- revoke your-address@mitwpu.edu.in
 ```
+
+Sample seeding adds date-specific rides for today and the next seven days. It never clears or moves an existing ride or booking. The running server refreshes samples when the India calendar date changes. To stop automatic sample additions, set `SEED_SAMPLE_RIDES=false` in `.env` and restart.
+
+Sign in once before granting administration to the local account. Role assignment happens through this local CLI, not through self-registration. Do not grant it to arbitrary users.
 
 ## Source map
 
-| File                          | Responsibility                                   |
-| ----------------------------- | ------------------------------------------------ |
-| app/page.tsx                  | Page entry                                       |
-| app/layout.tsx                | Title, metadata, favicon                         |
-| app/globals.css               | Shared visual system and responsive layout       |
-| components/commute-app.tsx    | Search, navigation and interaction orchestration |
-| components/offer-form.tsx     | Validated offer input                            |
-| components/place-select.tsx   | Consistent landmark controls                     |
-| components/commute-modal.tsx  | Accessible native dialog and error presentation  |
-| components/route-overview.tsx | Labelled landmark diagram                        |
-| lib/commute.ts                | Data models, search, fare and reservation rules  |
-| lib/demo-repository.ts        | Validated browser storage and failure recovery   |
-| tests/commute.test.mjs        | Business rule regression checks                  |
-| .openai/hosting.json          | Sites identity and logical runtime capabilities  |
+- `src/main.tsx` and `index.html`: current application entry and metadata.
+- `components/commute-app.tsx`: search, ride views and interaction orchestration.
+- `components/sign-in-panel.tsx`: sign-in and local test-code interface.
+- `components/offer-form.tsx`: single and recurring offer input.
+- `components/admin-panel.tsx`: reports and member moderation.
+- `hooks/use-commute-session.ts` and `lib/api.ts`: session and API state.
+- `lib/commute.ts`: shared models, filters and exact fare rules.
+- `server/auth.ts`: sign-in challenges and sessions.
+- `server/rides.ts`: persistence, booking transactions, recurrence and sample seeding.
+- `server/admin.ts`: report and moderation permissions.
+- `server/migrations/`: immutable applied schema migrations.
+- `tests/`: domain and server regression checks.
 
-## Phase 2 implementation order
+## Real email delivery
 
-1. Confirm email domains, backend constraints and provider accounts with the user.
-2. Add schema migrations for users, rides, bookings and recurring templates. Include foreign keys, capacity checks and uniqueness constraints.
-3. Implement sessions and verified identity. Protect every API server-side, including ownership checks.
-4. Implement shared ride reads and writes behind an explicit repository/API boundary. Never trust the frontend seat count or quoted fare.
-5. Reserve/cancel atomically and add idempotency. Test two simultaneous claims for the final seat against the real database.
-6. Switch the existing UI to server data with loading/error/retry handling. Keep a separate resettable demonstration dataset.
-7. Add idempotent recurring ride generation, then the smallest useful admin view.
-8. Run the Phase 2 completion gate and update status, decisions and mentor demonstration notes.
+Set `MAIL_MODE=resend`, `RESEND_API_KEY` and `EMAIL_FROM` in `.env` only after configuring a verified sender in Resend. Restart the server. Development accounts are labelled and do not prove email ownership. Never weaken email verification to make a failed integration appear successful.
 
-## Operating rules
+## Continuity and publication
 
-Use the existing Site project ID. Never create a replacement Site for an edit. Publish through the Sites workflow and preserve audience. Do not put credentials in shell arguments, source, handoff notes or screenshots. Configure secrets only through the provider's supported secret environment.
+Read `START_HERE.md` and `docs/PROJECT_STATUS.md` before continuing. Update status and decisions after meaningful changes. The user authorised a public GitHub repository, while website execution remains local. Do not deploy the application to Sites or another host unless requested.
 
-After each meaningful session, update PROJECT_STATUS.md with completed tasks, actual command results, known limitations, deployment state and the exact next action. Do not mark a check passed merely because a command was started.
-
+Keep `.env`, databases, local secrets and temporary files outside Git. Review both current files and commit history before a first public push. Preserve the working frontend and shared rules as the backend evolves.

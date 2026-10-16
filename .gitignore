@@ -10,3 +10,5 @@
 **/node_modules/
 **/dist/
 **/tsconfig.tsbuildinfo
+# Presentation intermediates stay local; the final PowerPoint is in presentations/.
+/presentation-work/

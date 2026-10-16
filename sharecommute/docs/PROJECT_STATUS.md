@@ -1,45 +1,43 @@
 # ShareCommute current status
 
-Updated: 6 October 2026, Asia/Kolkata. This file is the canonical progress record.
+Updated: 16 October 2026, Asia/Kolkata.
 
-## Approved direction
+## Current direction
 
-The user approved the two-phase split in PLAN.md. Phase 1 must be retained as the final project's foundation. The synopsis is background guidance. Campus and Pune settings currently follow that document and can be adjusted by the user.
+Public GitHub repository: https://github.com/samyak163/sharecommute. The user authorised this public source repository. The website still runs locally. Publishing source on GitHub does not deploy the website. The connected GitHub account and Git Credential Manager account both identify `samyak163`.
 
 ## Implemented
 
-- React/TypeScript project with supported Sites starter and original ShareCommute identity.
-- Route, destination, date, time tolerance and seat search; ride type filters and sorting.
-- Ride details, meeting notes, exact fare splitting, local reservation and cancellation.
-- Offer creation and cancellation; joined/offered views.
-- Fictional sample rides, explicit demo notices and reset.
-- Validated device-local persistence and storage failure feedback.
-- Desktop/mobile layout, labelled controls and native modal dialogs.
-- Business-rule test suite and continuity documents.
+- Original ShareCommute interface retained from Phase 1, using React, TypeScript and Vite.
+- Node API and shared local SQLite database with versioned SQL migrations. Drizzle is not used.
+- Institutional email suffix restriction to `@mitwpu.edu.in`, expiring one-time codes and HttpOnly sessions.
+- Explicit local development mailbox with a Use this test code button. Real Resend delivery is supported but not configured and verified end to end.
+- Route, date, time-window and seat search, ride-type filters and cost/time sorting.
+- Server-authorised ride offers, seat reservations and cancellation, with database capacity protection and booking idempotency.
+- Fare splitting in integer paise and current cost allocations.
+- Weekday recurring offers, unique occurrences and schedule cancellation.
+- Confirmed-participant contact sharing, ride reports and administrator moderation.
+- Additive sample seeding for today and the next seven days, with morning trips to campus and evening trips from campus. Dated IDs preserve existing reservations and cancellation history.
+- PowerPoint overview in `presentations/`.
 
-## Verification completed
+## Validation evidence
 
-- TypeScript: passed after component extraction and source formatting.
-- Business rules: 9 tests passed, 0 failed. Covers exact paise conservation, matching boundaries, last-seat removal, excess/duplicate reservations, multi-seat quoting, cancellation, ownership and invalid offers.
-- Production build: passed with the project framework script; Worker output generated.
-- Browser: destination/time search, two-seat booking at ₹90, reload persistence, cancellation restoring capacity, invalid route feedback, valid offer creation and cancellation, empty-state recovery and ascending price sorting verified.
-- Mobile: 390 × 844 viewport inspected; document scroll width equals client width after overflow fixes. Desktop also visually inspected.
-- Test-created bookings and offers reset before handoff. Sample rides are fresh for tomorrow.
-- Preview evidence is in ignored work/evidence/desktop.png. Local preview is available at http://127.0.0.1:5173/ while the development server is running.
+Fresh verification on 16 October 2026 passed all 27 tests, TypeScript and the Vite production build. This included sample-date rollover, existing-booking preservation, overbooking prevention, duplicate requests, ownership, contact privacy, recurrence and moderation. The staged payload and all existing historical blobs were checked for credentials and local data before publication; no findings were reported.
 
-## Phase 2 not implemented
+Browser checks in prior sessions covered sign-in, shared ride visibility across accounts, recurring offer creation and the original booking/cancellation flow. The most recent sample-data refresh has automated booking coverage; complete another manual booking walkthrough when continuing UI work.
 
-Real accounts, institutional verification, a shared database, atomic multi-user reservations, recurring rides and administration. No real payments, live maps, tracking, ratings or measured sustainability figures.
+## Local operation
 
-## Hosting
+Use `npm run dev` inside `sharecommute/`. The default frontend is `http://127.0.0.1:5173/` and API is `http://127.0.0.1:3001/`. The local database is `data/sharecommute.sqlite`. `npm run seed:samples` safely adds missing sample dates.
 
-Registered private Site ID: `appgprj_6ac4d14dc26c8191a58f7859e05440c4`.
-Expected origin: `https://sharecommute-campus-pbl.siddhant-bangar.chatgpt.site`.
-The Site is registered but not published. Automatic approval review rejected the source upload because it requires explicit user authorization for exporting the source and build to this private Sites destination. A permission question has been sent. Do not retry the export or use another upload route before authorization arrives.
+Local environment variables, database files, authentication secrets and temporary build files must remain untracked. The Resend key stays only in the ignored local environment file and must not be published.
 
-## Next actions
+## Remaining work
 
-Complete private publication and present Phase 1 for review. The next implementation phase is verified accounts and shared data. First confirm the actual institutional email domains, mentor technology constraints and an email provider with the user. Preserve the current frontend and pure rules.
+- Use the repository README to clone and run the project. Further source changes can be committed locally and pushed to the GitHub origin.
+- Optional: configure a verified Resend sender and verify actual delivery if the user wants real email verification.
+- Finish manual review of admin screens and the latest local sample-booking flow.
+- Reconcile older architectural notes when changing the implementation. Live maps, payments and a real campus pilot remain optional future scope.
 
-
+The earlier Sites project was registered but never published. The user superseded website-hosting plans with local execution and GitHub source sharing.
 

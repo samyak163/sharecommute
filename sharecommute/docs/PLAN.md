@@ -31,3 +31,7 @@ Live maps, tracking, cash collection, UPI payment verification, wallets, automat
 ## Academic evidence
 
 Present a clear problem, scoped requirements, UI flow, data model, matching rule, exact fare example, tests and honest limitations. A reproducible demonstration is stronger than a long list of promises.
+
+## Implementation update on 16 October 2026
+
+The implemented shared backend uses a local Node server and SQLite with parameterized SQL and versioned migrations. The user chose local website execution and a public GitHub source repository at https://github.com/samyak163/sharecommute. Earlier hosted Cloudflare/D1 suggestions are superseded. The current source includes recurring schedules, moderation and participant contact sharing. Real email delivery remains an optional integration pending a verified Resend sender, while the explicitly labelled development mailbox supports the local demonstration.
