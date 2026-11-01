@@ -12,6 +12,7 @@ import {
   type RideType,
 } from "@/lib/commute";
 import PlaceSelect from "./place-select";
+import RouteOverview from "./route-overview";
 export default function OfferForm({
   submit,
   close,
@@ -79,6 +80,14 @@ export default function OfferForm({
           name="destination"
           value={destination}
           onChange={setDestination}
+        />
+      </div>
+      <div className="offer-route-preview">
+        <h3>Your route</h3>
+        <RouteOverview
+          origin={origin as PlaceId}
+          destination={destination as PlaceId}
+          compact
         />
       </div>
       <div className="form-grid">

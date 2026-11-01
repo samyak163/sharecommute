@@ -1,5 +1,11 @@
 # ShareCommute architecture and requirements
 
+## Current implementation on 1 November 2026
+
+The retained React interface uses the local Node API and versioned SQLite migrations for verified users, shared rides, bookings, recurring schedules and moderation. The older Phase 1 and proposed-model sections below preserve the original design history; the implementation source and PROJECT_STATUS.md take precedence.
+
+Maps are a separate browser integration: RouteOverview uses one Google Maps SDK loader and the current Routes Library. Named landmark IDs are converted to Pune-qualified addresses. The route path, endpoint markers, distance and duration come from Google, while search and bookings continue to use the server's named-landmark model. A bounded memory cache shares concurrent route lookups and expires results after five minutes. Directions links do not include the API key. Map failures do not disable booking. See MAPS.md.
+
 ## Phase 1 implemented structure
 
 ```mermaid

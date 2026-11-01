@@ -39,8 +39,12 @@ Sign-in requires a code delivered to the college inbox. Local test-code sign-in 
 - Contact details visible to confirmed participants
 - Reports and administrator moderation
 - Daily sample-data refresh for today and the following seven days
+- Interactive Google Maps road routes with pickup/drop-off markers, distance and driving-time estimates
+- Route previews in ride details and the offer form, plus Google Maps directions links
 
-The map is a landmark schematic. Payment collection, live navigation and a real campus rollout are outside the current implementation. Resend sends a branded HTML and plain-text verification email after a sending domain is verified and configured. This setup is currently pending.
+Google Maps uses the named Pune landmarks to calculate a suggested driving route. Estimates exclude live traffic. Payment collection, vehicle tracking and a real campus rollout remain outside the current implementation. Real Resend delivery and college-inbox sign-in have been verified on this computer.
+
+Set `VITE_GOOGLE_MAPS_API_KEY` in the ignored local `.env` to enable the map. See [Maps setup](sharecommute/docs/MAPS.md) for the required Google APIs and local website restrictions. Each new checkout needs its own local email and map configuration.
 
 ## Development
 

@@ -13,6 +13,7 @@ Public GitHub repository: https://github.com/samyak163/sharecommute. The user au
 - Institutional email suffix restriction to `@mitwpu.edu.in`, expiring one-time codes and HttpOnly sessions.
 - Email-only verification with branded HTML/plain-text messages, ten-minute expiry, resend cooldown, attempt limits and no exposed test codes. Legacy local-code sessions and challenges are invalid. The valid Resend key is saved only in the ignored .env file. The sender is ShareCommute <no-reply@useclavis.com>. All four Resend DNS records were saved through the signed-in Dynadot in-app browser and confirmed after reload. Resend reports the domain and all four records verified. A real code was requested from the local website; Resend reported delivered and the user confirmed receipt. The user entered the inbox code successfully: the authenticated ride page now shows Email verified.
 - Route, date, time-window and seat search, ride-type filters and cost/time sorting.
+- Google Maps JavaScript API and Routes Library replace the schematic. Search results, ride details and the offer form show a road map with pickup/drop-off markers, calculated distance, estimated driving time, a fit-route control and key-free Google Maps directions links. Routing uses the existing seven Pune landmarks and driving estimates without live traffic. The key is configured only in ignored .env. In-flight requests and results are shared in a bounded five-minute memory cache; map failures leave booking available.
 - Server-authorised ride offers, seat reservations and cancellation, with database capacity protection and booking idempotency.
 - Fare splitting in integer paise and current cost allocations.
 - Weekday recurring offers, unique occurrences and schedule cancellation.
@@ -26,6 +27,8 @@ Previous verification on 16 October 2026 passed all 27 tests, TypeScript and the
 
 Browser checks in prior sessions covered sign-in, shared ride visibility across accounts, recurring offer creation and the original booking/cancellation flow. The most recent sample-data refresh has automated booking coverage; complete another manual booking walkthrough when continuing UI work.
 
+The Maps addition passes all 38 tests (including request deduplication, failure retries, expiry, bounded caching and key-free directions URLs), TypeScript and the production build. Browser checks used real Google responses for campus to all six other landmarks, and Pune Station back to campus. Checks covered the selected-ride map, ride-detail map, changed offer destinations, recovery from identical-landmark validation, route controls and a 360 px component layout. The full mobile application was not emulated in this pass; the map component itself was visually inspected at that narrow width. See MAPS.md for setup and scope.
+
 ## Local operation
 
 Use `npm run dev` inside `sharecommute/`. The default frontend is `http://127.0.0.1:5173/` and API is `http://127.0.0.1:3001/`. The local database is `data/sharecommute.sqlite`. `npm run seed:samples` safely adds missing sample dates.
@@ -37,6 +40,6 @@ Local environment variables, database files, authentication secrets and temporar
 - Use the repository README to clone and run the project. Further source changes can be committed locally and pushed to the GitHub origin.
 - Email setup and the real inbox-code sign-in test are complete. The local app is running on ports 5173/3001 and the in-app tab is signed in. Future sign-ins use a fresh code from the college inbox. The authorised test recipient and delivery receipt remain only in ignored work/. Do not replace the verified DNS records, edit other domains or restore local verification. Any valid @mitwpu.edu.in address is eligible under the same domain rule; real delivery was tested with the authorised inbox, and automated tests cover other college addresses and rejection of personal Gmail addresses.
 - Finish manual review of admin screens and the latest local sample-booking flow.
-- Reconcile older architectural notes when changing the implementation. Live maps, payments and a real campus pilot remain optional future scope.
+- Payments, vehicle tracking and a real campus pilot remain optional future scope. Interactive road maps are implemented.
 
 The earlier Sites project was registered but never published. The user superseded website-hosting plans with local execution and GitHub source sharing.

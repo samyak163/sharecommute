@@ -26,7 +26,7 @@ Completion gate: two real test accounts see the same data; unverified users are 
 
 ## Features to defer
 
-Live maps, tracking, cash collection, UPI payment verification, wallets, automatic penalties, AI matching and carbon analytics are outside the current essential scope. UPI QR generation alone does not verify a payment. Emission/savings figures require stated assumptions and evidence. Add a deferred feature only after the core workflows work and the user agrees.
+Vehicle tracking, cash collection, UPI payment verification, wallets, automatic penalties, AI matching and carbon analytics are outside the current essential scope. UPI QR generation alone does not verify a payment. Emission/savings figures require stated assumptions and evidence. Add a deferred feature only after the core workflows work and the user agrees.
 
 ## Academic evidence
 
@@ -39,3 +39,7 @@ The implemented shared backend uses a local Node server and SQLite with paramete
 ## Email verification requirement on 1 November 2026
 
 The user now requires real college-inbox verification through Resend. Local-code verification and legacy local sessions have been removed. The sender uses useclavis.com; website hosting is not required for email delivery. Complete provider verification and an actual inbox sign-in test before calling real email authentication finished. See PROJECT_STATUS.md for current evidence.
+
+## Google Maps addition on 1 November 2026
+
+The user supplied a Maps key and approved a working map. Replace the old schematic with an interactive Google map and a calculated driving route for the existing named landmarks. Show pickup/drop-off markers, distance, estimated driving time, route fitting and directions links. Include the same preview in ride details and the offer form. Preserve ride matching, booking rules and the shared database. Keep Maps configuration outside Git, handle provider failures, and verify actual routes in the browser. This scope does not introduce vehicle tracking or custom-address matching.

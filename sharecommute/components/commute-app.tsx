@@ -47,6 +47,7 @@ import {
   type Ride,
   type RideType,
   type Search,
+  type PlaceId,
 } from "@/lib/commute";
 import { api, ApiError } from "@/lib/api";
 import { useCommuteSession } from "@/hooks/use-commute-session";
@@ -167,7 +168,7 @@ export default function CommuteApp() {
             : new Date(a.departure).getTime() - new Date(b.departure).getTime(),
         )
     : [];
-  const selectedRide = state.rides.find((r) => r.id === selected) ?? matches[0];
+  const selectedRide = matches.find((r) => r.id === selected) ?? matches[0];
   const modalRide =
     modal?.kind === "ride"
       ? state.rides.find((r) => r.id === modal.rideId)
@@ -641,18 +642,26 @@ export default function CommuteApp() {
                         <h2>Along the way</h2>
                         <span>PUNE</span>
                       </div>
-                      <RouteOverview ride={selectedRide} />
+                      <RouteOverview
+                        ride={selectedRide}
+                        origin={search.origin as PlaceId}
+                        destination={
+                          (search.destination || undefined) as
+                            PlaceId | undefined
+                        }
+                      />
                       <div className="route-summary">
                         <span className="small-label">
-                          {selectedRide ? "SELECTED ROUTE" : "CAMPUS LANDMARKS"}
+                          {selectedRide ? "SELECTED RIDE" : "YOUR SEARCH"}
                         </span>
                         <h3>
-                          {place(selectedRide?.origin ?? "campus").short}{" "}
+                          {place(selectedRide?.origin ?? search.origin).short}{" "}
                           <span>to</span>{" "}
-                          {
-                            place(selectedRide?.destination ?? "shivajinagar")
-                              .short
-                          }
+                          {selectedRide?.destination || search.destination
+                            ? place(
+                                selectedRide?.destination ?? search.destination,
+                              ).short
+                            : "Any destination"}
                         </h3>
                         <p>
                           Choose a ride to see its meeting point and cost
@@ -1033,6 +1042,7 @@ export default function CommuteApp() {
               {timeLabel(modalRide.departure)} IST
             </span>
           </div>
+          <RouteOverview ride={modalRide} compact />
           <div className="meeting-point">
             <h3>Meeting point</h3>
             <p>
@@ -1346,9 +1356,9 @@ export default function CommuteApp() {
             </p>
             <p>Sign-in requires a code delivered to your college email.</p>
             <p>
-              Sample rides are fictional and labelled. Recurring commutes and
-              administration are the next Phase 2 additions. The route diagram
-              is a landmark schematic, not live navigation.
+              Sample rides are fictional and labelled. Google Maps shows a
+              suggested road route, distance and estimated driving time. Confirm
+              the meeting point with your host before travelling.
             </p>
             <p>
               Inspired by Quick Ride’s find-and-offer approach. ShareCommute is

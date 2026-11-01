@@ -774,20 +774,130 @@ h1 > span {
   position: relative;
   background: #edf2ed;
 }
-.route-map svg {
-  display: block;
+.google-map-canvas {
   width: 100%;
-  height: auto;
+  height: 320px;
 }
-.map-caption {
+.map-state {
   position: absolute;
-  bottom: 7px;
-  left: 8px;
-  background: #ffffffec;
-  padding: 3px 6px;
-  border-radius: 3px;
-  color: #526b59;
-  font-size: 10px;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  background: #edf3ef;
+  color: var(--green);
+  text-align: center;
+}
+.map-state p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 280px;
+}
+.map-state .text-button {
+  padding: 6px 12px;
+  text-decoration: underline;
+}
+.map-information {
+  padding: 14px 16px 16px;
+  background: #fff;
+}
+.map-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 15px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--green);
+}
+.map-metrics > span,
+.map-actions,
+.map-actions > a,
+.map-actions > button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.map-metrics strong {
+  font-size: 15px;
+}
+.map-metrics small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.map-landmarks p {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  margin: 7px 0;
+}
+.map-landmarks p > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #e5f1ea;
+  color: var(--deep);
+  font-size: 11px;
+  font-weight: 700;
+}
+.map-actions {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 10px;
+}
+.map-actions > a,
+.map-actions > button {
+  min-height: 35px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  text-underline-offset: 3px;
+}
+.map-actions > button {
+  padding: 0;
+}
+.map-actions > button:hover {
+  text-decoration: underline;
+}
+.map-disclaimer,
+.map-warning {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.map-warning {
+  color: #82581c;
+}
+.google-route.compact {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 15px 0;
+}
+.google-route.compact .google-map-canvas {
+  height: 270px;
+}
+.offer-route-preview h3 {
+  font-size: 14px;
+  margin-top: 4px;
+}
+.offer-route-preview .google-route.compact {
+  margin-top: 10px;
+}
+.offer-route-preview .map-landmarks {
+  display: none;
 }
 .route-summary {
   padding: 17px 18px 19px;
@@ -1455,8 +1565,8 @@ h1 > span {
     margin-top: 0;
     align-self: start;
   }
-  .route-map svg {
-    max-height: 280px;
+  .google-map-canvas {
+    height: 290px;
   }
   .search-options > span {
     display: none;
@@ -1734,8 +1844,8 @@ h1 > span {
   .route-panel {
     grid-row: auto;
   }
-  .route-map svg {
-    max-height: 270px;
+  .google-map-canvas {
+    height: 280px;
   }
   .community-note {
     padding: 18px;

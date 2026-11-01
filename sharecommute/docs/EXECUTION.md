@@ -40,6 +40,8 @@ Sign in once before granting administration to the local account. Role assignmen
 - `components/commute-app.tsx`: search, ride views and interaction orchestration.
 - `components/sign-in-panel.tsx`: email verification interface.
 - `components/offer-form.tsx`: single and recurring offer input.
+- `components/route-overview.tsx`: reusable interactive map, markers, estimates and route controls.
+- `lib/google-maps.ts` and `lib/map-routes.ts`: one SDK loader, route requests/cache and landmark directions URLs.
 - `components/admin-panel.tsx`: reports and member moderation.
 - `hooks/use-commute-session.ts` and `lib/api.ts`: session and API state.
 - `lib/commute.ts`: shared models, filters and exact fare rules.
@@ -52,6 +54,10 @@ Sign in once before granting administration to the local account. Role assignmen
 ## Real email delivery
 
 Set `RESEND_API_KEY` and `EMAIL_FROM` in `.env` after verifying a sending domain in Resend. Use a sender such as ShareCommute <no-reply@your-domain.com>. Restart the server. There is no development verification mode. Without a configured sender, the sign-in page reports verification unavailable and cannot display a test code. Legacy local sessions and local challenges cannot sign in. Existing account profiles and ride history remain until email ownership is verified.
+
+## Maps
+
+Maps setup is documented in [MAPS.md](MAPS.md). Configure `VITE_GOOGLE_MAPS_API_KEY` before starting Vite or building. Enable Maps JavaScript API and Routes API on the key's Google project. Browser keys require appropriate website and API restrictions; changing Vite environment values requires a restart or rebuild. The API key is deliberately absent from the source repository.
 
 ## Continuity and publication
 
