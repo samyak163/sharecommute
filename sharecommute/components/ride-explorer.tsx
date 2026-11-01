@@ -29,6 +29,7 @@ import {
 import RideSearchPanel from "./ride-search-panel";
 import RideResultCard from "./ride-result-card";
 import RouteOverview from "./route-overview";
+import { rideHighlights } from "@/lib/ride-comparison";
 
 export default function RideExplorer({
   state,
@@ -71,6 +72,7 @@ export default function RideExplorer({
   const currentIndex = selectedRide
     ? matches.findIndex((ride) => ride.id === selectedRide.id)
     : -1;
+  const highlights = rideHighlights(state, matches, search, userId);
   function preview(ride: Ride) {
     onSelect(ride.id);
     setDisplay("map");
@@ -210,6 +212,7 @@ export default function RideExplorer({
                   seats={search.seats}
                   index={index}
                   selected={ride.id === selectedRide?.id}
+                  highlights={highlights.get(ride.id)}
                   onPreview={() => preview(ride)}
                   onOpen={() => onOpen(ride)}
                 />

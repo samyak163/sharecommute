@@ -1,8 +1,10 @@
 # Final ShareCommute UI and UX proposal
 
-Prepared: 1 November 2026, Asia/Kolkata. Status: item 1 implemented and tested on desktop; items 2–7 remain proposals.
+Prepared: 1 November 2026, Asia/Kolkata. Status: items 1 and 2 implemented and tested on desktop; item 3 selected next; items 4–7 remain proposals.
 
 The user selected item 1 first and asked for implementation, behaviour checks and visual iteration until the result is polished enough for the mentor demonstration. Apply this same implement–test–refine standard to later selected items. Keep the current API/database working; do not begin other proposed features as part of this step.
+
+After item 1, the user requested a GitHub push and completion of any two remaining suggestions, step by step. Items 2 and 3 were selected. The earlier tested commits are now pushed and verified. Item 2 was completed before starting item 3; retain separate implementation and validation checkpoints.
 
 The user wants the final PBL presentation to show a polished, useful campus commuting website. Keep the working email verification, Maps integration, API and SQLite database. Focus changes on visible features and interactions. Preserve the main built-in browser tab and keep its pane visible while the user watches and tests.
 
@@ -19,6 +21,8 @@ The actual desktop browser was 855×668. Both the first complete card and map ca
 A real sample reservation persisted after reload, and cancellation restored capacity. The new work passed the existing 38 automated tests and the TypeScript/production build. No backend API or database schema changes were needed. The user explicitly waived phone testing in this step; a narrow-layout List/Map fallback exists but is not claimed as manually phone-tested. See PROJECT_STATUS.md for current evidence.
 
 ## Recommended scope and order
+
+Item 2 validation: all 42 tests and the TypeScript/production build passed. Browser checks verified filtered comparisons, multi-seat repricing (₹75 lowest for two seats versus ₹90 on the next option), closest-departure changes when the requested time moved from 5:00 to 5:30 pm, no comparison badge for a single result, keyboard meeting-note disclosure without changing the selected route, and first-card visibility without horizontal overflow. The actual desktop screenshot is under ignored work/ux-2-ride-cards.png.
 
 | Order | Upgrade | Behaviour and value |
 | --- | --- | --- |
