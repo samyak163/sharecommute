@@ -1,0 +1,716 @@
+/* The find-ride workspace: scoped so booking, offers and account screens retain their behaviour. */
+.site-header.explore-header {
+  height: 72px;
+}
+.main-container.explore-main {
+  max-width: 1420px;
+  margin: 0 auto;
+  padding: 0 28px 24px;
+}
+.explore-main .demo-strip {
+  padding: 7px 0;
+  font-size: 11px;
+}
+.ride-explorer {
+  container: ride-explorer / inline-size;
+}
+.explorer-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+}
+.explorer-eyebrow {
+  color: #657c70;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.explorer-heading h1 {
+  font-size: 27px;
+  line-height: 1.2;
+  letter-spacing: -1px;
+}
+.explorer-heading h1 > span {
+  color: var(--green);
+  font-weight: 750;
+}
+.explorer-heading > p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.explorer-search {
+  border: 1px solid #dce6df;
+  background: #fff;
+  border-radius: 13px;
+  padding: 14px 16px 10px;
+  box-shadow: 0 4px 18px #183e2705;
+}
+.explorer-search form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "fields submit" "meta meta";
+  gap: 9px 14px;
+}
+.explorer-search-fields {
+  grid-area: fields;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.25fr) minmax(0, 1.25fr) minmax(0, 0.95fr)
+    minmax(0, 0.8fr);
+  gap: 10px;
+}
+.explorer-search .field {
+  gap: 5px;
+}
+.explorer-search .field > span {
+  font-size: 10px;
+  font-weight: 700;
+  color: #667d6f;
+  letter-spacing: 0.45px;
+  text-transform: uppercase;
+}
+.explorer-search .field-input {
+  padding: 0 9px;
+  gap: 6px;
+  background: #f9fbfa;
+  border-color: #e2e9e4;
+  border-radius: 7px;
+}
+.explorer-search .field-input:focus-within {
+  border-color: var(--green);
+  background: #fff;
+}
+.explorer-search .field-input select,
+.explorer-search .field-input input {
+  font-size: 13px;
+  height: 42px;
+  padding: 8px 0;
+  min-width: 0;
+}
+.explorer-search .field-input svg {
+  width: 14px;
+}
+.explorer-search-submit {
+  grid-area: submit;
+  align-self: end;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+}
+.explorer-search-meta {
+  grid-area: meta;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 24px;
+}
+.search-options-toggle {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 3px 0;
+  color: #466350;
+  font-size: 11px;
+  font-weight: 600;
+  min-height: 26px;
+}
+.search-options-toggle svg:last-child {
+  transition: transform 150ms;
+}
+.search-options-toggle[aria-expanded="true"] svg:last-child {
+  transform: rotate(180deg);
+}
+.search-preferences {
+  color: #65756e;
+  font-size: 11px;
+}
+.search-draft-note {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--green);
+}
+.explorer-search-options {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+.explorer-search-options[hidden] {
+  display: none;
+}
+.explorer-search-options label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #5e7467;
+  font-size: 12px;
+}
+.explorer-search-options select {
+  font-size: 12px;
+  padding: 6px 8px;
+  min-height: 34px;
+}
+.explorer-search-options p {
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: auto;
+}
+.explorer-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+  gap: 24px;
+  margin-top: 16px;
+  align-items: start;
+}
+.explorer-results {
+  min-width: 0;
+}
+.explorer-results .results-heading {
+  min-height: 40px;
+}
+.explorer-results .results-heading h2 {
+  font-size: 19px;
+  letter-spacing: -0.5px;
+  gap: 8px;
+}
+.explorer-results .results-heading p {
+  font-size: 11px;
+  margin-top: 4px;
+}
+.explorer-results .sort-control {
+  flex-shrink: 0;
+}
+.explorer-results .sort-control select {
+  font-size: 11px;
+}
+.explorer-results .filters {
+  gap: 7px;
+  margin: 13px 0 14px;
+}
+.explorer-results .filters button {
+  font-size: 12px;
+  padding: 6px 10px;
+  min-height: 35px;
+  border-radius: 7px;
+  gap: 5px;
+}
+.explorer-results .ride-list {
+  gap: 12px;
+}
+.explorer-ride-card {
+  position: relative;
+  cursor: pointer;
+  transition:
+    border-color 150ms,
+    box-shadow 150ms,
+    background 150ms;
+}
+.explorer-ride-card:hover {
+  border-color: #a8c5b3;
+  box-shadow: 0 3px 15px #163e2808;
+}
+.explorer-ride-card.focused {
+  border-color: #378565;
+  background: #f7fbf8;
+  box-shadow: 0 0 0 1px #37856530;
+}
+.explorer-ride-card .ride-person {
+  padding: 14px 16px 0;
+  gap: 9px;
+}
+.explorer-ride-card .avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 11px;
+}
+.explorer-ride-card .ride-person h3 {
+  font-size: 14px;
+  gap: 2px 6px;
+}
+.explorer-ride-card .ride-person p {
+  font-size: 11px;
+  color: #627367;
+}
+.explorer-ride-card .role-badge {
+  font-size: 10px;
+  color: #496854;
+}
+.explorer-ride-card .type-badge {
+  font-size: 10px;
+  padding: 3px 6px;
+}
+.explorer-ride-card .type-bike {
+  color: #446578;
+}
+.explorer-ride-card .type-cab {
+  color: #73613d;
+}
+.explorer-ride-card .ride-body {
+  padding: 16px 16px 11px;
+  gap: 12px;
+}
+.explorer-ride-card .ride-path > div {
+  gap: 9px;
+}
+.explorer-ride-card .ride-path > div + div {
+  margin-top: 11px;
+}
+.explorer-ride-card .ride-path strong {
+  font-size: 13px;
+}
+.explorer-ride-card .ride-path small {
+  font-size: 11px;
+  color: #627367;
+}
+.explorer-ride-card .ride-path time {
+  font-size: 11px;
+  padding: 2px 4px;
+}
+.explorer-ride-card .ride-path > div:first-child {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  gap: 7px;
+}
+.explorer-ride-card .ride-price {
+  min-width: 78px;
+}
+.explorer-ride-card .ride-price > strong {
+  font-size: 25px;
+}
+.explorer-ride-card .ride-price > span {
+  font-size: 11px;
+  color: #5d7364;
+}
+.explorer-ride-card .ride-price > small {
+  font-size: 11px;
+  max-width: 100px;
+  margin-top: 3px;
+  color: #627367;
+}
+.explorer-ride-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  padding: 0 16px 12px;
+  color: #627367;
+  font-size: 10px;
+}
+.explorer-ride-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.explorer-ride-meta > span:first-child {
+  color: #427450;
+}
+.explorer-ride-actions {
+  padding: 9px 16px;
+  gap: 9px;
+  border-top-color: #e6ede8;
+}
+.explorer-ride-actions .button {
+  font-size: 12px;
+  min-height: 34px;
+  padding: 7px 12px;
+}
+.preview-route-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #65796d;
+  padding: 7px 0;
+}
+.preview-route-button[aria-pressed="true"] {
+  color: var(--green);
+}
+.explorer-map {
+  min-width: 0;
+  position: sticky;
+  top: 18px;
+}
+.explorer-map .route-panel {
+  border-color: #d5e2d9;
+  border-radius: 13px;
+  box-shadow: 0 4px 18px #183e2705;
+}
+.explorer-map-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  background: #fff;
+}
+.explorer-map-heading > div:first-child > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #284b39;
+  font-size: 12px;
+  font-weight: 700;
+}
+.explorer-map-heading p {
+  font-size: 11px;
+  color: #63786b;
+  margin-top: 2px;
+}
+.route-pagination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.route-pagination > span {
+  font-size: 11px;
+  color: #345440;
+  min-width: 34px;
+  text-align: center;
+}
+.route-pagination > span > span {
+  color: #61766a;
+}
+.route-pagination button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #dfe7e1;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: #3b644d;
+  padding: 0;
+}
+.route-pagination button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.route-pagination button:hover:not(:disabled) {
+  background: #f0f7f2;
+  border-color: #b5d2bf;
+}
+.explorer-route .google-map-canvas {
+  height: clamp(290px, 43vh, 460px);
+}
+.explorer-route .map-information {
+  padding: 12px 16px 13px;
+}
+.explorer-route .map-metrics {
+  padding-bottom: 9px;
+  margin-bottom: 8px;
+  gap: 8px 16px;
+}
+.explorer-route .map-metrics strong {
+  font-size: 14px;
+}
+.explorer-route .map-metrics small {
+  margin-left: auto;
+}
+.explorer-route .map-landmarks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.explorer-route .map-landmarks p {
+  margin: 4px 0;
+  font-size: 11px;
+  gap: 7px;
+}
+.explorer-route .map-landmarks p > span {
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+}
+.explorer-route .map-actions {
+  margin-top: 6px;
+}
+.explorer-route .map-actions > a,
+.explorer-route .map-actions > button {
+  min-height: 29px;
+  font-size: 11px;
+}
+.explorer-route .map-disclaimer {
+  margin-top: 5px;
+  font-size: 10px;
+  line-height: 1.65;
+}
+.explorer-selected-ride {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f4f8f5;
+  border-top: 1px solid var(--line);
+}
+.explorer-selected-ride > div {
+  min-width: 0;
+}
+.explorer-selected-ride strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+}
+.explorer-selected-ride strong > span {
+  font-weight: 400;
+  color: #92a498;
+  margin: 0 4px;
+}
+.explorer-selected-ride > div > span {
+  display: block;
+  font-size: 10px;
+  color: #5e7566;
+  margin-top: 3px;
+}
+.explorer-selected-ride .button {
+  font-size: 11px;
+  padding: 8px 12px;
+  min-height: 35px;
+}
+.explorer-results .results-footnote {
+  font-size: 11px;
+  line-height: 1.7;
+  margin: 15px 0;
+}
+.explorer-view-controls {
+  display: none;
+}
+@container ride-explorer (max-width: 1000px) {
+  .explorer-search-fields {
+    grid-template-columns:
+      minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, 0.95fr)
+      minmax(0, 0.8fr);
+    gap: 8px;
+  }
+  .explorer-search {
+    padding: 12px 13px 6px;
+  }
+  .explorer-search form {
+    gap: 7px 10px;
+  }
+  .explorer-search-submit {
+    padding: 10px 13px;
+    font-size: 12px;
+  }
+  .explorer-search-submit svg {
+    width: 15px;
+  }
+  .explorer-search .field-input {
+    padding: 0 7px;
+    gap: 4px;
+  }
+  .explorer-search .field-input > svg {
+    display: none;
+  }
+  .explorer-search .field-input select,
+  .explorer-search .field-input input {
+    font-size: 12px;
+  }
+  .explorer-workspace {
+    gap: 18px;
+  }
+  .explorer-results .results-heading {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .explorer-results .results-heading h2 {
+    font-size: 18px;
+  }
+  .explorer-results .filters {
+    gap: 5px;
+  }
+  .explorer-results .filters button {
+    padding: 5px 7px;
+    font-size: 11px;
+  }
+  .explorer-results .filters button svg {
+    width: 13px;
+  }
+  .explorer-ride-card .ride-person {
+    flex-wrap: wrap;
+  }
+  .explorer-ride-card .ride-person > .type-badge {
+    margin-left: auto;
+  }
+  .explorer-ride-card .ride-body {
+    gap: 7px;
+  }
+  .explorer-ride-card .ride-price {
+    min-width: 75px;
+  }
+  .explorer-route .map-landmarks {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+@container ride-explorer (max-width: 760px) {
+  .explorer-heading {
+    padding: 15px 0 13px;
+  }
+  .explorer-heading h1 {
+    font-size: 25px;
+  }
+  .explorer-heading > p {
+    display: none;
+  }
+  .explorer-search-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 11px 10px;
+  }
+  .explorer-search form {
+    grid-template-areas: "fields fields" "meta submit";
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 11px 10px;
+  }
+  .explorer-search .field-input > svg {
+    display: block;
+  }
+  .explorer-search .field-input select,
+  .explorer-search .field-input input {
+    font-size: 13px;
+  }
+  .explorer-search-meta {
+    flex-wrap: wrap;
+    gap: 1px 10px;
+    align-content: center;
+  }
+  .search-preferences {
+    width: 100%;
+    font-size: 10px;
+  }
+  .search-draft-note {
+    display: none;
+  }
+  .explorer-search-submit {
+    min-height: 43px;
+  }
+  .explorer-search-options {
+    gap: 10px;
+  }
+  .explorer-search-options label {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .explorer-search-options label select {
+    margin-left: auto;
+  }
+  .explorer-search-options p {
+    margin-left: 0;
+  }
+  .explorer-view-controls {
+    display: flex;
+    gap: 5px;
+    padding: 4px;
+    background: #e8eee9;
+    border-radius: 9px;
+    margin-top: 18px;
+    scroll-margin-top: 12px;
+  }
+  .explorer-view-controls > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex: 1;
+    padding: 9px;
+    min-height: 37px;
+    border-radius: 6px;
+    color: #718477;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .explorer-view-controls > button[aria-pressed="true"] {
+    background: white;
+    color: var(--deep);
+    box-shadow: 0 1px 5px #25472d0d;
+  }
+  .explorer-view-controls > button > span {
+    border-radius: 4px;
+    background: #e7f0e9;
+    padding: 0 5px;
+    font-size: 10px;
+  }
+  .explorer-workspace {
+    display: block;
+    margin-top: 18px;
+  }
+  .explorer-workspace[data-view="list"] .explorer-map {
+    display: none;
+  }
+  .explorer-workspace[data-view="map"] .explorer-results {
+    display: none;
+  }
+  .explorer-map {
+    position: static;
+  }
+  .explorer-route .google-map-canvas {
+    height: clamp(290px, 46vh, 450px);
+  }
+  .explorer-results .results-heading {
+    flex-wrap: nowrap;
+  }
+  .explorer-results .filters {
+    margin: 12px 0 14px;
+    gap: 6px;
+  }
+  .explorer-results .filters button {
+    flex: 1;
+    padding: 6px 7px;
+    min-height: 35px;
+  }
+  .explorer-ride-card .ride-person {
+    flex-wrap: nowrap;
+    padding: 14px 15px 0;
+  }
+  .explorer-ride-card .ride-body {
+    padding: 17px 15px 11px;
+  }
+  .explorer-ride-card .ride-path time {
+    position: static;
+    background: #edf4ef;
+  }
+  .explorer-ride-card .ride-price {
+    min-width: 85px;
+  }
+  .explorer-route .map-landmarks {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+}
+@container ride-explorer (max-width: 390px) {
+  .explorer-results .results-heading {
+    flex-wrap: wrap;
+  }
+  .explorer-ride-card .ride-person h3 {
+    font-size: 13px;
+  }
+  .explorer-ride-card .type-badge {
+    font-size: 9px;
+  }
+  .explorer-ride-card .ride-path strong {
+    font-size: 12px;
+  }
+  .explorer-route .map-landmarks {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+@media (max-width: 600px) {
+  .site-header.explore-header {
+    height: auto;
+  }
+  .main-container.explore-main {
+    padding: 0 16px 20px;
+  }
+  .explore-main .demo-strip > span {
+    font-size: 10px;
+  }
+}

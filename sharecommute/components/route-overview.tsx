@@ -22,11 +22,13 @@ export default function RouteOverview({
   origin,
   destination,
   compact = false,
+  explorer = false,
 }: {
   ride?: Ride;
   origin?: PlaceId;
   destination?: PlaceId;
   compact?: boolean;
+  explorer?: boolean;
 }) {
   const from = place(ride?.origin ?? origin ?? "campus");
   const destinationId = ride?.destination ?? destination;
@@ -41,6 +43,29 @@ export default function RouteOverview({
   );
   const [message, setMessage] = useState("");
   const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    const element = container.current;
+    if (!element) return;
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (
+          element.clientWidth > 0 &&
+          element.clientHeight > 0 &&
+          bounds.current
+        ) {
+          map.current?.fitBounds(bounds.current, 32);
+        }
+      });
+    });
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,7 +166,7 @@ export default function RouteOverview({
 
   return (
     <section
-      className={`google-route ${compact ? "compact" : ""}`}
+      className={`google-route ${compact ? "compact" : ""} ${explorer ? "explorer-route" : ""}`}
       aria-label="Route map and directions"
     >
       <div className="route-map">

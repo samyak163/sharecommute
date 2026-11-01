@@ -26,6 +26,7 @@ Reference: https://quickride.in/ — studied through the actual browser, includi
 - The frontend demonstration is a foundation for the final application, not throwaway work.
 - The user is available to help with logins, APIs and missing requirements.
 - Write down context and progress so work survives a new chat.
+- Keep the main ShareCommute tab and built-in browser visible while working so the user can watch and test. Preserve the main tab at handoff; close only temporary QA tabs.
 
 No credentials or student PRNs belong in these handoff files.
 

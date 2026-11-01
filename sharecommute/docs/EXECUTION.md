@@ -38,6 +38,8 @@ Sign in once before granting administration to the local account. Role assignmen
 
 - `src/main.tsx` and `index.html`: current application entry and metadata.
 - `components/commute-app.tsx`: search, ride views and interaction orchestration.
+- `components/ride-explorer.tsx`, `ride-search-panel.tsx` and `ride-result-card.tsx`: desktop search/map workspace, editable search controls and selectable ride results.
+- `app/explorer.css`: styles scoped to the search workspace, imported after the existing shared stylesheet.
 - `components/sign-in-panel.tsx`: email verification interface.
 - `components/offer-form.tsx`: single and recurring offer input.
 - `components/route-overview.tsx`: reusable interactive map, markers, estimates and route controls.
