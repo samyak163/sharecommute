@@ -277,13 +277,7 @@ export default function CommuteApp() {
           <span>
             <span className="demo-tag">LOCAL</span>
             {user ? (
-              <>
-                {user.name} ·{" "}
-                {user.verification === "email"
-                  ? "Email verified"
-                  : "Development account"}{" "}
-                · Shared local database
-              </>
+              <>{user.name} · Email verified · Shared local database</>
             ) : (
               "Sign in with your institutional email to find and offer rides."
             )}
@@ -1350,11 +1344,7 @@ export default function CommuteApp() {
               database on this computer. Booking and cancellation rules are
               enforced by the local server.
             </p>
-            <p>
-              {session.mailMode === "development"
-                ? "Development email mode shows test codes locally and does not verify email ownership. Resend verification is available once the Resend settings are configured."
-                : "Sign-in codes are delivered through the configured Resend provider."}
-            </p>
+            <p>Sign-in requires a code delivered to your college email.</p>
             <p>
               Sample rides are fictional and labelled. Recurring commutes and
               administration are the next Phase 2 additions. The route diagram

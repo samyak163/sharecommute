@@ -7,7 +7,8 @@ export function useCommuteSession() {
   const [state, setState] = useState<CommuteState>(empty);
   const [session, setSession] = useState<SessionInfo>({
     user: null,
-    mailMode: "development",
+    mailMode: "resend",
+    verificationAvailable: false,
     allowedDomains: ["mitwpu.edu.in"],
   });
   const [ready, setReady] = useState(false),

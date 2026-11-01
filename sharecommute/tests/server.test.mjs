@@ -5,17 +5,27 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync, mkdtempSync, rmSync, rmdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { openDatabase } from "../server/database.ts";
-import { createAuth } from "../server/auth.ts";
+import { createAuth, sessionHash } from "../server/auth.ts";
 import { createApp } from "../server/app.ts";
 import { createRideService } from "../server/rides.ts";
 import { availableSeats } from "../lib/commute.ts";
 
 const origin = "http://127.0.0.1:5173";
-const developmentMailer = { mode: "development", async sendCode() {} };
+// Test-only fake email delivery. Codes never come from the HTTP response.
+const deliveredCodes = new Map();
+const emailMailer = {
+  mode: "resend",
+  available: true,
+  async sendCode(email, code) {
+    deliveredCodes.set(email, code);
+  },
+};
+const deliveredCode = (name) =>
+  deliveredCodes.get(name.toLowerCase() + "@mitwpu.edu.in");
 const baseOptions = {
   secret: "test-only-secret",
   domains: ["mitwpu.edu.in"],
-  mailer: developmentMailer,
+  mailer: emailMailer,
   origins: [origin],
   authRequestLimit: 100,
   authCooldownMs: 0,
@@ -72,7 +82,7 @@ async function fixture(t, options = {}) {
     const signed = await call("/api/auth/verify", {
       body: {
         challengeId: challenge.data.challengeId,
-        code: challenge.data.developmentCode,
+        code: deliveredCode(name),
       },
     });
     assert.equal(signed.status, 200);
@@ -128,18 +138,20 @@ test("code exchange issues an HttpOnly session, rejects replay and supports logo
   const challenge = f.db
     .prepare("SELECT code_hash FROM login_challenges WHERE id = ?")
     .get(code.data.challengeId);
-  assert.notEqual(challenge.code_hash, code.data.developmentCode);
+  assert.notEqual(challenge.code_hash, deliveredCode("Alex"));
+  assert.equal(code.data.developmentCode, undefined);
+  assert.equal(code.data.code, undefined);
   const response = await f.call("/api/auth/verify", {
     body: {
       challengeId: code.data.challengeId,
-      code: code.data.developmentCode,
+      code: deliveredCode("Alex"),
     },
   });
   assert.equal(response.status, 200);
   assert.match(response.cookieHeader, /HttpOnly/);
   assert.match(response.cookieHeader, /SameSite=Strict/);
   assert.equal(response.data.token, undefined);
-  assert.equal(response.data.user.verification, "development");
+  assert.equal(response.data.user.verification, "email");
   assert.equal(
     (await f.call("/api/session", { cookie: response.cookie })).data.user.email,
     "alex@mitwpu.edu.in",
@@ -149,7 +161,7 @@ test("code exchange issues an HttpOnly session, rejects replay and supports logo
       await f.call("/api/auth/verify", {
         body: {
           challengeId: code.data.challengeId,
-          code: code.data.developmentCode,
+          code: deliveredCode("Alex"),
         },
       })
     ).status,
@@ -169,12 +181,12 @@ test("wrong attempts are persisted and expired codes and sessions are rejected",
   const auth = createAuth(db, {
     secret: "test",
     domains: ["mitwpu.edu.in"],
-    mailer: developmentMailer,
+    mailer: emailMailer,
     now: () => now,
     cooldownMs: 0,
   });
   const c = await auth.requestCode(profile("Alex"), "local");
-  const wrong = c.developmentCode === "000000" ? "111111" : "000000";
+  const wrong = deliveredCode("Alex") === "000000" ? "111111" : "000000";
   for (let i = 0; i < 5; i++)
     assert.throws(() =>
       auth.verify({ challengeId: c.challengeId, code: wrong }),
@@ -186,20 +198,20 @@ test("wrong attempts are persisted and expired codes and sessions are rejected",
     5,
   );
   assert.throws(() =>
-    auth.verify({ challengeId: c.challengeId, code: c.developmentCode }),
+    auth.verify({ challengeId: c.challengeId, code: deliveredCode("Alex") }),
   );
   const expired = await auth.requestCode(profile("Blair"), "local");
   now += 600001;
   assert.throws(() =>
     auth.verify({
       challengeId: expired.challengeId,
-      code: expired.developmentCode,
+      code: deliveredCode("Blair"),
     }),
   );
   const valid = await auth.requestCode(profile("Casey"), "local");
   const signed = auth.verify({
     challengeId: valid.challengeId,
-    code: valid.developmentCode,
+    code: deliveredCode("Casey"),
   });
   assert.ok(auth.session(signed.token));
   now += 7 * 86400000 + 1;
@@ -212,7 +224,7 @@ test("login requests enforce cooldowns and rate limits", async (t) => {
   const auth = createAuth(db, {
     secret: "test",
     domains: ["mitwpu.edu.in"],
-    mailer: developmentMailer,
+    mailer: emailMailer,
     requestLimit: 2,
   });
   await auth.requestCode(profile("Alex"), "same-ip");
@@ -446,7 +458,7 @@ test("SQLite retains records across database restart and migrations do not dupli
     assert.equal(db.prepare("SELECT COUNT(*) AS n FROM rides").get().n, before);
     assert.equal(
       db.prepare("SELECT COUNT(*) AS n FROM schema_migrations").get().n,
-      3,
+      4,
     );
     assert.equal(createRideService(db).seed(), false);
   } finally {
@@ -457,83 +469,342 @@ test("SQLite retains records across database restart and migrations do not dupli
   }
 });
 
-test('recurring offers generate unique weekdays and do not resurrect cancelled occurrences', async t => {
-  const f=await fixture(t),host=await f.login('Host'),rider=await f.login('Alex');
-  const start=new Date(Date.now()+86400000),end=new Date(start.getTime()+14*86400000).toISOString().slice(0,10);
-  const response=await f.call('/api/rides',{cookie:host.cookie,body:{...offer(),type:'carpool',capacity:4,recurring:{weekdays:[1,3,5],endDate:end}}});
-  assert.equal(response.status,201);
-  const initial=response.data.state.rides,template=response.data.state.schedules[0];
-  assert.ok(initial.length>=5);assert.deepEqual(template.weekdays,[1,3,5]);
-  assert.ok(initial.every(r=>[1,3,5].includes(new Date(r.departure).getUTCDay())));
-  f.app.rides.generateScheduled();f.app.rides.generateScheduled();
-  assert.equal((await f.call('/api/state',{cookie:host.cookie})).data.state.rides.length,initial.length);
-  await f.call(`/api/rides/${initial[0].id}/cancel`,{cookie:host.cookie,body:{}});
+test("recurring offers generate unique weekdays and do not resurrect cancelled occurrences", async (t) => {
+  const f = await fixture(t),
+    host = await f.login("Host"),
+    rider = await f.login("Alex");
+  const start = new Date(Date.now() + 86400000),
+    end = new Date(start.getTime() + 14 * 86400000).toISOString().slice(0, 10);
+  const response = await f.call("/api/rides", {
+    cookie: host.cookie,
+    body: {
+      ...offer(),
+      type: "carpool",
+      capacity: 4,
+      recurring: { weekdays: [1, 3, 5], endDate: end },
+    },
+  });
+  assert.equal(response.status, 201);
+  const initial = response.data.state.rides,
+    template = response.data.state.schedules[0];
+  assert.ok(initial.length >= 5);
+  assert.deepEqual(template.weekdays, [1, 3, 5]);
+  assert.ok(
+    initial.every((r) => [1, 3, 5].includes(new Date(r.departure).getUTCDay())),
+  );
   f.app.rides.generateScheduled();
-  assert.equal((await f.call('/api/state',{cookie:host.cookie})).data.state.rides.find(r=>r.id===initial[0].id).status,'cancelled');
-  await f.call(`/api/rides/${initial[1].id}/bookings`,{cookie:rider.cookie,body:{seats:1,idempotencyKey:randomUUID()}});
-  assert.equal((await f.call(`/api/schedules/${template.id}/stop`,{cookie:rider.cookie,body:{}})).status,404);
-  const stopped=await f.call(`/api/schedules/${template.id}/stop`,{cookie:host.cookie,body:{}});
-  assert.equal(stopped.status,200);assert.equal(stopped.data.state.schedules[0].active,false);
-  assert.ok(stopped.data.state.rides.every(r=>r.status==='cancelled'));
-  assert.equal((await f.call('/api/state',{cookie:rider.cookie})).data.state.bookings[0].status,'cancelled');
-  f.app.rides.generateScheduled();assert.equal(f.db.prepare("SELECT COUNT(*) n FROM rides WHERE status='open'").get().n,0);
+  f.app.rides.generateScheduled();
+  assert.equal(
+    (await f.call("/api/state", { cookie: host.cookie })).data.state.rides
+      .length,
+    initial.length,
+  );
+  await f.call(`/api/rides/${initial[0].id}/cancel`, {
+    cookie: host.cookie,
+    body: {},
+  });
+  f.app.rides.generateScheduled();
+  assert.equal(
+    (await f.call("/api/state", { cookie: host.cookie })).data.state.rides.find(
+      (r) => r.id === initial[0].id,
+    ).status,
+    "cancelled",
+  );
+  await f.call(`/api/rides/${initial[1].id}/bookings`, {
+    cookie: rider.cookie,
+    body: { seats: 1, idempotencyKey: randomUUID() },
+  });
+  assert.equal(
+    (
+      await f.call(`/api/schedules/${template.id}/stop`, {
+        cookie: rider.cookie,
+        body: {},
+      })
+    ).status,
+    404,
+  );
+  const stopped = await f.call(`/api/schedules/${template.id}/stop`, {
+    cookie: host.cookie,
+    body: {},
+  });
+  assert.equal(stopped.status, 200);
+  assert.equal(stopped.data.state.schedules[0].active, false);
+  assert.ok(stopped.data.state.rides.every((r) => r.status === "cancelled"));
+  assert.equal(
+    (await f.call("/api/state", { cookie: rider.cookie })).data.state
+      .bookings[0].status,
+    "cancelled",
+  );
+  f.app.rides.generateScheduled();
+  assert.equal(
+    f.db.prepare("SELECT COUNT(*) n FROM rides WHERE status='open'").get().n,
+    0,
+  );
 });
 
-test('recurring dates and empty selections are rejected', async t => {
-  const f=await fixture(t),host=await f.login('Host');
-  for(const recurring of [{weekdays:[],endDate:'2026-12-01'},{weekdays:[1],endDate:'2026-02-30'},{weekdays:[1],endDate:'2000-01-01'},{weekdays:[6],endDate:'2026-12-01'}]) {
-    assert.equal((await f.call('/api/rides',{cookie:host.cookie,body:{...offer(),recurring}})).status,400);
+test("recurring dates and empty selections are rejected", async (t) => {
+  const f = await fixture(t),
+    host = await f.login("Host");
+  for (const recurring of [
+    { weekdays: [], endDate: "2026-12-01" },
+    { weekdays: [1], endDate: "2026-02-30" },
+    { weekdays: [1], endDate: "2000-01-01" },
+    { weekdays: [6], endDate: "2026-12-01" },
+  ]) {
+    assert.equal(
+      (
+        await f.call("/api/rides", {
+          cookie: host.cookie,
+          body: { ...offer(), recurring },
+        })
+      ).status,
+      400,
+    );
   }
 });
 
-test('contacts are shared only for confirmed participants and disappear after cancellation',async t=>{
-  const f=await fixture(t),host=await f.login('Host'),rider=await f.login('Alex'),outsider=await f.login('Blair');
-  const ride=(await f.call('/api/rides',{cookie:host.cookie,body:offer()})).data;
-  assert.equal((await f.call('/api/state',{cookie:rider.cookie})).data.state.rides[0].hostEmail,undefined);
-  const booking=(await f.call(`/api/rides/${ride.id}/bookings`,{cookie:rider.cookie,body:{seats:1,idempotencyKey:randomUUID()}})).data;
-  assert.equal(booking.state.rides[0].hostEmail,host.user.email);
-  const hostView=(await f.call('/api/state',{cookie:host.cookie})).data.state;
-  assert.equal(hostView.rides[0].passengers[0].email,rider.user.email);
-  const outsiderView=(await f.call('/api/state',{cookie:outsider.cookie})).data.state;
-  assert.equal(outsiderView.rides[0].hostEmail,undefined);assert.equal(outsiderView.rides[0].passengers,undefined);
-  await f.call(`/api/bookings/${booking.id}/cancel`,{cookie:rider.cookie,body:{}});
-  assert.equal((await f.call('/api/state',{cookie:rider.cookie})).data.state.rides[0].hostEmail,undefined);
+test("contacts are shared only for confirmed participants and disappear after cancellation", async (t) => {
+  const f = await fixture(t),
+    host = await f.login("Host"),
+    rider = await f.login("Alex"),
+    outsider = await f.login("Blair");
+  const ride = (
+    await f.call("/api/rides", { cookie: host.cookie, body: offer() })
+  ).data;
+  assert.equal(
+    (await f.call("/api/state", { cookie: rider.cookie })).data.state.rides[0]
+      .hostEmail,
+    undefined,
+  );
+  const booking = (
+    await f.call(`/api/rides/${ride.id}/bookings`, {
+      cookie: rider.cookie,
+      body: { seats: 1, idempotencyKey: randomUUID() },
+    })
+  ).data;
+  assert.equal(booking.state.rides[0].hostEmail, host.user.email);
+  const hostView = (await f.call("/api/state", { cookie: host.cookie })).data
+    .state;
+  assert.equal(hostView.rides[0].passengers[0].email, rider.user.email);
+  const outsiderView = (await f.call("/api/state", { cookie: outsider.cookie }))
+    .data.state;
+  assert.equal(outsiderView.rides[0].hostEmail, undefined);
+  assert.equal(outsiderView.rides[0].passengers, undefined);
+  await f.call(`/api/bookings/${booking.id}/cancel`, {
+    cookie: rider.cookie,
+    body: {},
+  });
+  assert.equal(
+    (await f.call("/api/state", { cookie: rider.cookie })).data.state.rides[0]
+      .hostEmail,
+    undefined,
+  );
 });
 
-test('reports require valid text; only administrators can resolve reports and suspend users',async t=>{
-  const f=await fixture(t),host=await f.login('Host'),rider=await f.login('Alex'),admin=await f.login('Admin');
-  f.db.prepare('UPDATE users SET is_admin=1 WHERE id=?').run(admin.user.id);
-  const ride=(await f.call('/api/rides',{cookie:host.cookie,body:offer()})).data;
-  assert.equal((await f.call('/api/admin',{cookie:rider.cookie})).status,403);
-  assert.equal((await f.call(`/api/rides/${ride.id}/report`,{cookie:rider.cookie,body:{reason:'bad'}})).status,400);
-  assert.equal((await f.call(`/api/rides/${ride.id}/report`,{cookie:rider.cookie,body:{reason:'The meeting point needs clarification.'}})).status,201);
-  assert.equal((await f.call(`/api/rides/${ride.id}/report`,{cookie:rider.cookie,body:{reason:'Another report for the same ride.'}})).status,409);
-  const overview=(await f.call('/api/admin',{cookie:admin.cookie})).data;
-  assert.equal(overview.counts.reports,1);const reportId=overview.reports[0].id;
-  assert.equal((await f.call(`/api/admin/reports/${reportId}/resolve`,{cookie:rider.cookie,body:{}})).status,403);
-  assert.equal((await f.call(`/api/admin/reports/${reportId}/resolve`,{cookie:admin.cookie,body:{}})).status,200);
-  await f.call(`/api/rides/${ride.id}/bookings`,{cookie:rider.cookie,body:{seats:1,idempotencyKey:randomUUID()}});
-  assert.equal((await f.call(`/api/admin/users/${host.user.id}/suspend`,{cookie:rider.cookie,body:{suspended:true}})).status,403);
-  assert.equal((await f.call(`/api/admin/users/${admin.user.id}/suspend`,{cookie:admin.cookie,body:{suspended:true}})).status,400);
-  assert.equal((await f.call(`/api/admin/users/${host.user.id}/suspend`,{cookie:admin.cookie,body:{suspended:true}})).status,200);
-  assert.equal((await f.call('/api/state',{cookie:host.cookie})).status,401);
-  assert.equal((await f.call('/api/state',{cookie:rider.cookie})).data.state.bookings[0].status,'cancelled');
-  assert.equal((await f.call('/api/auth/request-code',{body:profile('Host')})).status,403);
-  assert.equal((await f.call(`/api/admin/users/${host.user.id}/suspend`,{cookie:admin.cookie,body:{suspended:false}})).status,200);
-  assert.equal((await f.call('/api/state',{cookie:host.cookie})).status,401);
-  assert.equal((await f.call('/api/admin',{cookie:admin.cookie})).data.counts.reports,0);
+test("reports require valid text; only administrators can resolve reports and suspend users", async (t) => {
+  const f = await fixture(t),
+    host = await f.login("Host"),
+    rider = await f.login("Alex"),
+    admin = await f.login("Admin");
+  f.db.prepare("UPDATE users SET is_admin=1 WHERE id=?").run(admin.user.id);
+  const ride = (
+    await f.call("/api/rides", { cookie: host.cookie, body: offer() })
+  ).data;
+  assert.equal(
+    (await f.call("/api/admin", { cookie: rider.cookie })).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.call(`/api/rides/${ride.id}/report`, {
+        cookie: rider.cookie,
+        body: { reason: "bad" },
+      })
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await f.call(`/api/rides/${ride.id}/report`, {
+        cookie: rider.cookie,
+        body: { reason: "The meeting point needs clarification." },
+      })
+    ).status,
+    201,
+  );
+  assert.equal(
+    (
+      await f.call(`/api/rides/${ride.id}/report`, {
+        cookie: rider.cookie,
+        body: { reason: "Another report for the same ride." },
+      })
+    ).status,
+    409,
+  );
+  const overview = (await f.call("/api/admin", { cookie: admin.cookie })).data;
+  assert.equal(overview.counts.reports, 1);
+  const reportId = overview.reports[0].id;
+  assert.equal(
+    (
+      await f.call(`/api/admin/reports/${reportId}/resolve`, {
+        cookie: rider.cookie,
+        body: {},
+      })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.call(`/api/admin/reports/${reportId}/resolve`, {
+        cookie: admin.cookie,
+        body: {},
+      })
+    ).status,
+    200,
+  );
+  await f.call(`/api/rides/${ride.id}/bookings`, {
+    cookie: rider.cookie,
+    body: { seats: 1, idempotencyKey: randomUUID() },
+  });
+  assert.equal(
+    (
+      await f.call(`/api/admin/users/${host.user.id}/suspend`, {
+        cookie: rider.cookie,
+        body: { suspended: true },
+      })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.call(`/api/admin/users/${admin.user.id}/suspend`, {
+        cookie: admin.cookie,
+        body: { suspended: true },
+      })
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await f.call(`/api/admin/users/${host.user.id}/suspend`, {
+        cookie: admin.cookie,
+        body: { suspended: true },
+      })
+    ).status,
+    200,
+  );
+  assert.equal(
+    (await f.call("/api/state", { cookie: host.cookie })).status,
+    401,
+  );
+  assert.equal(
+    (await f.call("/api/state", { cookie: rider.cookie })).data.state
+      .bookings[0].status,
+    "cancelled",
+  );
+  assert.equal(
+    (await f.call("/api/auth/request-code", { body: profile("Host") })).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.call(`/api/admin/users/${host.user.id}/suspend`, {
+        cookie: admin.cookie,
+        body: { suspended: false },
+      })
+    ).status,
+    200,
+  );
+  assert.equal(
+    (await f.call("/api/state", { cookie: host.cookie })).status,
+    401,
+  );
+  assert.equal(
+    (await f.call("/api/admin", { cookie: admin.cookie })).data.counts.reports,
+    0,
+  );
 });
 
-test('real email verification invalidates earlier development sessions and codes',async t=>{
-  const db=openDatabase(':memory:');t.after(()=>db.close());
-  const opts={secret:'test',domains:['mitwpu.edu.in'],cooldownMs:0};
-  const dev=createAuth(db,{...opts,mailer:developmentMailer});
-  const first=await dev.requestCode(profile('Alex'),'local');const oldSession=dev.verify({challengeId:first.challengeId,code:first.developmentCode});
-  let actualCode;
-  const real=createAuth(db,{...opts,mailer:{mode:'resend',async sendCode(_email,code){actualCode=code;}}});
-  assert.equal(real.session(oldSession.token),null);
-  const second=await real.requestCode(profile('Alex'),'local');const realSession=real.verify({challengeId:second.challengeId,code:actualCode});
-  assert.equal(realSession.user.verification,'email');assert.equal(dev.session(oldSession.token),null);
-  assert.equal(real.session(realSession.token).verification,'email');
-  await assert.rejects(dev.requestCode(profile('Alex'),'local'),/Resend mode/);
+test("legacy local sessions and codes are rejected while verified sign-in preserves the account", async (t) => {
+  const db = openDatabase(":memory:");
+  t.after(() => db.close());
+  const timestamp = Date.now(),
+    oldToken = "a".repeat(43),
+    legacyId = randomUUID();
+  db.prepare(
+    "INSERT INTO users(id,email,name,role,verification,created_at) VALUES('legacy','alex@mitwpu.edu.in','Alex Tester','Student','development',?)",
+  ).run(timestamp);
+  db.prepare("INSERT INTO sessions VALUES(?,?,?)").run(
+    sessionHash(oldToken),
+    "legacy",
+    timestamp + 86400000,
+  );
+  db.prepare(
+    "INSERT INTO login_challenges(id,email,name,role,code_hash,verification,requested_at,expires_at,ip) VALUES(?,'alex@mitwpu.edu.in','Alex Tester','Student',?,'development',?,?,'local')",
+  ).run(legacyId, "0".repeat(64), timestamp - 60001, timestamp + 600000);
+  const auth = createAuth(db, {
+    secret: "test",
+    domains: ["mitwpu.edu.in"],
+    mailer: emailMailer,
+    cooldownMs: 0,
+  });
+  assert.equal(auth.session(oldToken), null);
+  assert.throws(
+    () => auth.verify({ challengeId: legacyId, code: "123456" }),
+    /expired|usable/,
+  );
+  const fresh = await auth.requestCode(profile("Alex"), "local");
+  assert.equal(fresh.developmentCode, undefined);
+  const verified = auth.verify({
+    challengeId: fresh.challengeId,
+    code: deliveredCode("Alex"),
+  });
+  assert.equal(verified.user.id, "legacy");
+  assert.equal(verified.user.verification, "email");
+  assert.equal(auth.session(oldToken), null);
+  assert.equal(auth.session(verified.token).verification, "email");
+});
+
+test("unconfigured email fails closed without generating a challenge", async (t) => {
+  const f = await fixture(t, {
+    mailer: {
+      mode: "resend",
+      available: false,
+      async sendCode() {
+        throw new Error("Should never run");
+      },
+    },
+  });
+  const session = await f.call("/api/session");
+  assert.equal(session.data.verificationAvailable, false);
+  const result = await f.call("/api/auth/request-code", {
+    body: profile("Alex"),
+  });
+  assert.equal(result.status, 503);
+  assert.equal(result.data.developmentCode, undefined);
+  assert.equal(
+    f.db.prepare("SELECT COUNT(*) n FROM login_challenges").get().n,
+    0,
+  );
+});
+
+test("all valid college addresses use email delivery and personal Gmail is rejected", async (t) => {
+  const f = await fixture(t);
+  assert.equal(
+    (
+      await f.call("/api/auth/request-code", {
+        body: { ...profile("Alex"), email: "alex@gmail.com" },
+      })
+    ).status,
+    400,
+  );
+  const c = await f.call("/api/auth/request-code", {
+    body: { ...profile("Member"), email: "Another.Member@mitwpu.edu.in" },
+  });
+  assert.equal(c.status, 200);
+  assert.ok(deliveredCodes.has("another.member@mitwpu.edu.in"));
+  assert.deepEqual(
+    Object.keys(c.data).sort(),
+    ["challengeId", "delivery", "expiresAt", "resendAfterSeconds"].sort(),
+  );
 });

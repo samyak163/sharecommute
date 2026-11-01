@@ -10,7 +10,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { transaction } from "./database.ts";
 import { HttpError } from "./errors.ts";
-import type { Mailer } from "./mailer.ts";
+import { MailDeliveryError, type Mailer } from "./resend-mailer.ts";
 
 export type User = {
   id: string;
@@ -97,6 +97,11 @@ export function createAuth(
           400,
           `Use an email ending in ${options.domains.map((d) => "@" + d).join(" or ")}.`,
         );
+      if (options.mailer.available === false)
+        throw new HttpError(
+          503,
+          "Email verification is temporarily unavailable. Please contact the project administrator.",
+        );
       const timestamp = now();
       const result = transaction(db, () => {
         const blocked = db
@@ -106,14 +111,6 @@ export function createAuth(
           throw new HttpError(403, "This account is suspended.");
         if (blocked?.verification === "sample")
           throw new HttpError(403, "Sample profiles cannot sign in.");
-        if (
-          blocked?.verification === "email" &&
-          options.mailer.mode === "development"
-        )
-          throw new HttpError(
-            403,
-            "Use Resend mode to sign in to this email-verified account.",
-          );
         const recent = db
           .prepare(
             "SELECT COUNT(*) AS count FROM login_challenges WHERE requested_at > ? AND (email = ? OR ip = ?)",
@@ -152,7 +149,7 @@ export function createAuth(
           data.name,
           data.role,
           codeHash(challengeId, code),
-          options.mailer.mode === "resend" ? "email" : "development",
+          "email",
           timestamp,
           expiresAt,
           ip,
@@ -160,23 +157,31 @@ export function createAuth(
         return { challengeId, code, expiresAt };
       });
       try {
-        await options.mailer.sendCode(data.email, result.code);
-      } catch {
+        await options.mailer.sendCode(
+          data.email,
+          result.code,
+          result.challengeId,
+        );
+      } catch (error) {
+        console.error(
+          "Verification email failed:",
+          error instanceof MailDeliveryError
+            ? error.message
+            : "Email delivery is unavailable.",
+        );
         db.prepare("UPDATE login_challenges SET consumed = 1 WHERE id = ?").run(
           result.challengeId,
         );
         throw new HttpError(
           503,
-          "The verification email could not be sent. Check the Resend configuration and try again shortly.",
+          "The verification email could not be sent. Please try again in a minute or contact the project administrator.",
         );
       }
       return {
         challengeId: result.challengeId,
         expiresAt: result.expiresAt,
         delivery: options.mailer.mode,
-        ...(options.mailer.mode === "development"
-          ? { developmentCode: result.code }
-          : {}),
+        resendAfterSeconds: 60,
       };
     },
     verify(input: unknown) {
@@ -190,6 +195,7 @@ export function createAuth(
           .get(challengeId) as Challenge | undefined;
         if (
           !challenge ||
+          challenge.verification !== "email" ||
           challenge.consumed ||
           challenge.expires_at <= now() ||
           challenge.attempts >= 5
@@ -233,14 +239,6 @@ export function createAuth(
         if (row.suspended || row.verification === "sample")
           return { error: "This account cannot sign in." };
         if (
-          row.verification === "email" &&
-          challenge.verification === "development"
-        )
-          return {
-            error:
-              "Request a new code through email delivery for this account.",
-          };
-        if (
           challenge.verification === "email" &&
           row.verification === "development"
         ) {
@@ -271,8 +269,7 @@ export function createAuth(
           "SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > ? AND u.suspended = 0",
         )
         .get(sessionHash(token), now()) as UserRow | undefined;
-      if (row?.verification === 'development' && options.mailer.mode !== 'development') return null;
-      return row ? publicUser(row) : null;
+      return row?.verification === "email" ? publicUser(row) : null;
     },
     logout(token?: string) {
       if (token)

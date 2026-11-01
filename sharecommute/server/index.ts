@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
 import { openDatabase } from "./database.ts";
 import { createApp } from "./app.ts";
-import { createMailer } from "./mailer.ts";
+import { createMailer } from "./resend-mailer.ts";
 import { indiaDate } from "../lib/commute.ts";
 
 if (existsSync(".env")) process.loadEnvFile(".env");
@@ -28,10 +28,13 @@ const db = openDatabase(
   process.env.DATABASE_PATH ?? "data/sharecommute.sqlite",
 );
 const mailer = createMailer({
-  mode: process.env.MAIL_MODE ?? "development",
   apiKey: process.env.RESEND_API_KEY,
   from: process.env.EMAIL_FROM,
 });
+if (!mailer.available)
+  console.error(
+    "Email verification is disabled until RESEND_API_KEY and EMAIL_FROM on a verified Resend domain are configured. Local-code sign-in is not available.",
+  );
 const { server, rides } = createApp(db, {
   secret,
   domains,

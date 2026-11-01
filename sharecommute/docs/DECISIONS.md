@@ -19,3 +19,15 @@
 **Trust:** Fictional members are explicitly marked as sample members. Do not display invented verification, ratings or safety guarantees. Give practical meeting guidance. Real email verification and authorisation are Phase 2 work.
 
 **Continuity:** Keep START_HERE.md, PROJECT_STATUS.md, PLAN.md, EXECUTION.md, DEMO_SCRIPT.md and this decision log current. Root AGENTS.md points a future chat to them.
+
+## Email-only sign-in on 1 November 2026
+
+The user requested real email verification for every valid @mitwpu.edu.in address and removal of local-code sign-in. The UI no longer displays or auto-enters a verification code. Backend responses never return one, and unverified legacy sessions/challenges cannot grant access. Existing profiles and ride history remain available after inbox verification.
+
+The supplied Resend key passed the read-only account check. Its account initially listed zero sending domains, and the user initially had no selected domain. The key remains only in the ignored .env file. A website deployment is not necessary for email delivery. Do not claim that real mail is working until an authorised inbox receives a code and verification succeeds.
+
+## Sender domain selected on 1 November 2026
+
+The user selected useclavis.com at Dynadot for Resend and explicitly authorised DNS setup for this domain only. The domain is registered in Resend and the local sender is ShareCommute <no-reply@useclavis.com>. Exact DNS records are in ignored work/useclavis-resend-dns.txt.
+
+In-app browser control recovered after the user changed settings and asked for another attempt. The four records were saved and confirmed after a page reload. Switching from Dynadot Parking to Dynadot DNS also required a root record; the root A address was preserved as the existing publicly resolved 185.53.179.149. No other domain was edited. Resend subsequently verified the domain and all records. A real code request through the local UI was accepted; Resend reported delivered and the user confirmed receipt. The user entered the inbox code and successfully signed in, with Email verified shown on the authenticated ride page. The website continues to run locally.

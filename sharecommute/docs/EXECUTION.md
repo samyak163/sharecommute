@@ -9,7 +9,7 @@ npm ci
 npm run dev
 ```
 
-Copy `.env.example` to `.env` to configure the local environment. The default mail mode is development, so no email leaves the computer. The frontend normally uses port 5173 and the API uses 3001. To choose another frontend port, use `npm run dev -- 5174`.
+Copy `.env.example` to `.env` to configure the local environment. Local test-code verification has been removed. Email delivery requires a configured sender before users can sign in. The frontend normally uses port 5173 and the API uses 3001. To choose another frontend port, use `npm run dev -- 5174`.
 
 ## Checks and compiled mode
 
@@ -38,7 +38,7 @@ Sign in once before granting administration to the local account. Role assignmen
 
 - `src/main.tsx` and `index.html`: current application entry and metadata.
 - `components/commute-app.tsx`: search, ride views and interaction orchestration.
-- `components/sign-in-panel.tsx`: sign-in and local test-code interface.
+- `components/sign-in-panel.tsx`: email verification interface.
 - `components/offer-form.tsx`: single and recurring offer input.
 - `components/admin-panel.tsx`: reports and member moderation.
 - `hooks/use-commute-session.ts` and `lib/api.ts`: session and API state.
@@ -51,7 +51,7 @@ Sign in once before granting administration to the local account. Role assignmen
 
 ## Real email delivery
 
-Set `MAIL_MODE=resend`, `RESEND_API_KEY` and `EMAIL_FROM` in `.env` only after configuring a verified sender in Resend. Restart the server. Development accounts are labelled and do not prove email ownership. Never weaken email verification to make a failed integration appear successful.
+Set `RESEND_API_KEY` and `EMAIL_FROM` in `.env` after verifying a sending domain in Resend. Use a sender such as ShareCommute <no-reply@your-domain.com>. Restart the server. There is no development verification mode. Without a configured sender, the sign-in page reports verification unavailable and cannot display a test code. Legacy local sessions and local challenges cannot sign in. Existing account profiles and ride history remain until email ownership is verified.
 
 ## Continuity and publication
 

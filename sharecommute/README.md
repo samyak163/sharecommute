@@ -14,4 +14,4 @@ npm run typecheck
 npm run build
 ```
 
-Copy `.env.example` to `.env` before configuring mail settings. The default development mode displays a test code and sends no email. Local accounts, bookings and offers are stored in the ignored `data/` directory.
+Copy `.env.example` to `.env` before configuring mail settings. All sign-ins require a code delivered by email. Configure a verified sender before use. Local accounts, bookings and offers are stored in the ignored `data/` directory.

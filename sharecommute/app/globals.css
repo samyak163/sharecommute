@@ -2025,29 +2025,7 @@ h1 > span {
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
-.local-mailbox {
-  background: #f5f2e9;
-  border: 1px solid #e4dcc6;
-  border-radius: 10px;
-  padding: 17px;
-}
-.local-mailbox > strong {
-  font-size: 13px;
-  color: #7b693f;
-}
-.mailbox-code {
-  font-size: 27px;
-  letter-spacing: 7px;
-  display: block;
-  margin: 8px 0;
-  color: #51472e;
-  font-variant-numeric: tabular-nums;
-}
-.local-mailbox p {
-  font-size: 13px;
-  line-height: 1.7;
-  color: #7d7052;
-}
+
 .account-button {
   display: flex;
   align-items: center;
@@ -2320,4 +2298,27 @@ h1 > span {
   .weekday-options {
     gap: 10px;
   }
+}
+.verification-hint {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.verification-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.verification-actions .text-button {
+  min-height: 38px;
+}
+.auth-footnote svg {
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.verification-actions button:disabled {
+  opacity: 0.65;
+  cursor: default;
 }

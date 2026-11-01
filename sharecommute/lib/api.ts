@@ -32,19 +32,20 @@ export type CurrentUser = {
   name: string;
   email: string;
   role: "Student" | "Faculty";
-  verification: "development" | "email" | "sample";
+  verification: "email";
   isAdmin: boolean;
 };
 export type SessionInfo = {
   user: CurrentUser | null;
-  mailMode: "development" | "resend";
+  mailMode: "resend";
+  verificationAvailable: boolean;
   allowedDomains: string[];
 };
 export type CodeChallenge = {
   challengeId: string;
   expiresAt: number;
-  delivery: "development" | "resend";
-  developmentCode?: string;
+  delivery: "resend";
+  resendAfterSeconds: number;
 };
 export class ApiError extends Error {
   status: number;

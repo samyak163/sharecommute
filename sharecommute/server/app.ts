@@ -9,7 +9,7 @@ import { extname, resolve, sep } from "node:path";
 import { createAuth } from "./auth.ts";
 import { createRideService } from "./rides.ts";
 import { HttpError } from "./errors.ts";
-import type { Mailer } from "./mailer.ts";
+import type { Mailer } from "./resend-mailer.ts";
 import { createAdminService } from "./admin.ts";
 
 export type AppOptions = {
@@ -94,6 +94,7 @@ export function createApp(db: DatabaseSync, options: AppOptions) {
           return json(res, 200, {
             user,
             mailMode: options.mailer.mode,
+            verificationAvailable: options.mailer.available !== false,
             allowedDomains: options.domains,
           });
         if (method === "POST" && path === "/api/auth/request-code")

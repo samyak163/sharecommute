@@ -22,12 +22,12 @@ Open the URL printed by Vite, normally **http://127.0.0.1:5173/**. The local API
 ## Try a booking
 
 1. Enter a name and an address ending in `@mitwpu.edu.in`.
-2. Choose **Get a local sign-in code**, then **Use this test code**.
+2. Choose **Send verification code**, check the college inbox and enter the six-digit code.
 3. Search from **MIT-WPU Main Gate** for tomorrow around **5:00 PM**.
 4. Open a sample ride and select **Confirm booking**.
 5. View the reservation in **My rides**, reload the page, or cancel it to release the seat.
 
-Development mode shows the test code locally and does not verify email ownership or send mail. Fictional sample rides are labelled. Reservations use the actual local server and SQLite database.
+Sign-in requires a code delivered to the college inbox. Local test-code sign-in has been removed. Configure a verified email sender before trying a booking. Fictional sample rides are labelled. Reservations use the actual local server and SQLite database.
 
 ## Features
 
@@ -40,7 +40,7 @@ Development mode shows the test code locally and does not verify email ownership
 - Reports and administrator moderation
 - Daily sample-data refresh for today and the following seven days
 
-The map is a landmark schematic. Payment collection, live navigation and a real campus rollout are outside the current implementation. Resend email delivery is available in code but requires a configured, verified sender before use.
+The map is a landmark schematic. Payment collection, live navigation and a real campus rollout are outside the current implementation. Resend sends a branded HTML and plain-text verification email after a sending domain is verified and configured. This setup is currently pending.
 
 ## Development
 

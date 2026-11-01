@@ -132,7 +132,7 @@ export default function AdminPanel() {
                     {member.role} ·{" "}
                     {member.verification === "email"
                       ? "Email verified"
-                      : "Development account"}
+                      : "Email not verified"}
                     {member.suspended ? " · Suspended" : ""}
                   </small>
                 </div>
