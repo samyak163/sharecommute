@@ -47,3 +47,9 @@ Scoped explorer.css preserves the other screens. The route map observes containe
 ## Ride-card comparisons on 1 November 2026
 
 For the next selected UX step, retain the existing named-route search and quotes. A pure comparison helper marks the minimum total share for the requested seats and the minimum absolute difference from the preferred IST departure among the filtered, unreserved options. Ties are explicit and single-option comparisons are omitted. Cards with the user's confirmed booking show their booking state instead of a new-reservation ranking. Meeting-note disclosure stops card-selection propagation, so inspecting pickup instructions does not change the map unexpectedly. The current API and database were retained.
+
+## Booking review and ticket on 2 November 2026
+
+The user selected the review/confirmation upgrade as the second requested UX feature. The ride details now lead through seat and fare review before booking. The existing authenticated booking endpoint, SQLite database, idempotency key and cancellation route remain authoritative. The interface displays a ticket only after the returned state contains a confirmed booking matching the server-issued ID, user, ride and requested seats. The ticket offers a Google directions link and a standard iCalendar pickup reminder in local time, with a 15-minute alert. The event does not estimate arrival and does not process payment.
+
+All 47 automated tests, TypeScript and the production build passed. Browser inspection and the actual calendar download remain pending because built-in browser control is disabled in Work settings.

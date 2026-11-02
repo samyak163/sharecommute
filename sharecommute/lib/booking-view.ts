@@ -73,7 +73,12 @@ export function confirmedBooking(
   const ride = state.rides.find(
     (item) => item.id === rideId && item.status === "open",
   );
-  if (!booking || !ride)
+  if (
+    !booking ||
+    !ride ||
+    !Number.isSafeInteger(booking.seats) ||
+    booking.seats < 1
+  )
     throw new Error(
       "The server did not return a confirmed booking. Refresh availability and try again.",
     );

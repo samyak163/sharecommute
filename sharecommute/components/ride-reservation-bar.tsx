@@ -115,6 +115,12 @@ export default function RideReservationBar({
         Review booking
         <ArrowRight size={15} />
       </button>
+      {preview.reason && (
+        <p className="reservation-validation" role="status">
+          <Info size={13} />
+          {preview.reason}
+        </p>
+      )}
     </div>
   );
 }
