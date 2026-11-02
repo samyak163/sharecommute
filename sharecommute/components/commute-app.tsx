@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Route,
   MapPin,
@@ -31,10 +31,8 @@ import {
   findRides,
   indiaDate,
   money,
-  passengerSeats,
   place,
   quote,
-  splitFare,
   timeLabel,
   tomorrow,
   type CommuteState,
@@ -47,6 +45,14 @@ import { useCommuteSession } from "@/hooks/use-commute-session";
 import AdminPanel from "./admin-panel";
 import ReportForm from "./report-form";
 import SignInPanel from "./sign-in-panel";
+import BookingReview, { BookingReviewFooter } from "./booking-review";
+import BookingTicket from "./booking-ticket";
+import RideReservationBar from "./ride-reservation-bar";
+import {
+  bookingPreview,
+  bookingReference,
+  confirmedBooking,
+} from "@/lib/booking-view";
 
 const iconFor = (type: RideType) => (type === "bike" ? Bike : CarFront);
 const initials = (name: string) =>
@@ -57,6 +63,8 @@ const initials = (name: string) =>
     .join("");
 type ModalState =
   | { kind: "ride"; rideId: string }
+  | { kind: "review"; rideId: string }
+  | { kind: "ticket"; bookingId: string }
   | { kind: "offer" }
   | { kind: "help" }
   | { kind: "report"; rideId: string }
@@ -90,6 +98,11 @@ export default function CommuteApp() {
   const [modal, setModal] = useState<ModalState>(null),
     [bookSeats, setBookSeats] = useState(1),
     [rideTab, setRideTab] = useState<"joined" | "offered">("joined");
+  const bookingAttempt = useRef<{
+    rideId: string;
+    seats: number;
+    key: string;
+  } | null>(null);
   useEffect(() => {
     if (!feedback || feedback.error) return;
     const timer = setTimeout(() => setFeedback(null), 6000);
@@ -166,6 +179,20 @@ export default function CommuteApp() {
     modal?.kind === "ride"
       ? state.rides.find((r) => r.id === modal.rideId)
       : undefined;
+  const reviewRide =
+    modal?.kind === "review"
+      ? state.rides.find((ride) => ride.id === modal.rideId)
+      : undefined;
+  const ticketBooking =
+    modal?.kind === "ticket"
+      ? state.bookings.find(
+          (booking) =>
+            booking.id === modal.bookingId && booking.userId === userId,
+        )
+      : undefined;
+  const ticketRide = ticketBooking
+    ? state.rides.find((ride) => ride.id === ticketBooking.rideId)
+    : undefined;
   const myBookings = state.bookings
       .filter((b) => b.userId === userId)
       .slice()
@@ -183,6 +210,36 @@ export default function CommuteApp() {
       setModal(null);
       setFeedback((prev) => (prev?.error ? null : prev));
     };
+  async function reserveRide(ride: Ride) {
+    const preview = bookingPreview(state, ride, bookSeats, userId);
+    if (!preview.canConfirm) {
+      setFeedback({ message: preview.reason, error: true });
+      return;
+    }
+    const previous = bookingAttempt.current;
+    const attempt =
+      previous?.rideId === ride.id && previous.seats === bookSeats
+        ? previous
+        : { rideId: ride.id, seats: bookSeats, key: crypto.randomUUID() };
+    bookingAttempt.current = attempt;
+    let receiptId = "";
+    const ok = await commit(async () => {
+      const result = await api.book(ride.id, bookSeats, attempt.key);
+      try {
+        confirmedBooking(result.state, result.id, ride.id, userId, bookSeats);
+      } catch (error) {
+        bookingAttempt.current = null;
+        throw error;
+      }
+      receiptId = result.id;
+      return result;
+    }, "Booking confirmed.");
+    if (ok && receiptId) {
+      bookingAttempt.current = null;
+      setFeedback(null);
+      setModal({ kind: "ticket", bookingId: receiptId });
+    }
+  }
   return (
     <>
       <a className="skip-link" href="#main">
@@ -474,9 +531,7 @@ export default function CommuteApp() {
                                     ? "Confirmed booking"
                                     : "Cancelled"}
                                 </span>
-                                <small>
-                                  SC-{b.id.slice(0, 8).toUpperCase()}
-                                </small>
+                                <small>{bookingReference(b.id)}</small>
                               </div>
                               <h3>
                                 {place(r.origin).short} to{" "}
@@ -503,9 +558,18 @@ export default function CommuteApp() {
                                 <div>
                                   <button
                                     className="button small secondary"
-                                    onClick={() => showRide(r)}
+                                    onClick={() =>
+                                      b.status === "confirmed"
+                                        ? setModal({
+                                            kind: "ticket",
+                                            bookingId: b.id,
+                                          })
+                                        : showRide(r)
+                                    }
                                   >
-                                    Details
+                                    {b.status === "confirmed"
+                                      ? "View booking"
+                                      : "Details"}
                                   </button>
                                   {b.status === "confirmed" && (
                                     <button
@@ -634,11 +698,78 @@ export default function CommuteApp() {
           />
         </Modal>
       )}
+      {modal?.kind === "review" && reviewRide && user && (
+        <Modal
+          title="Review your booking"
+          close={close}
+          busy={pending}
+          errorMessage={feedback?.error ? feedback.message : undefined}
+          footer={
+            <BookingReviewFooter
+              state={state}
+              ride={reviewRide}
+              userId={userId}
+              seats={bookSeats}
+              pending={pending}
+              onConfirm={() => reserveRide(reviewRide)}
+              onBack={() => {
+                setFeedback(null);
+                setModal({ kind: "ride", rideId: reviewRide.id });
+              }}
+              onExisting={(id) => setModal({ kind: "ticket", bookingId: id })}
+            />
+          }
+        >
+          <BookingReview
+            state={state}
+            ride={reviewRide}
+            userId={userId}
+            seats={bookSeats}
+            pending={pending}
+            onSeatsChange={setBookSeats}
+            onRefresh={async () => {
+              const result = await api.state();
+              apply(result.state);
+              setFeedback(null);
+            }}
+          />
+        </Modal>
+      )}
+      {modal?.kind === "ticket" && ticketBooking && ticketRide && (
+        <Modal title="Your booking" close={close} wide>
+          <BookingTicket
+            booking={ticketBooking}
+            ride={ticketRide}
+            state={state}
+            onDetails={() => showRide(ticketRide)}
+            onRides={() => {
+              setView("rides");
+              setRideTab("joined");
+              close();
+            }}
+          />
+        </Modal>
+      )}
       {modal?.kind === "ride" && modalRide && (
         <Modal
           title="Your shared journey"
           close={close}
           errorMessage={feedback?.error ? feedback.message : undefined}
+          footer={
+            <RideReservationBar
+              state={state}
+              ride={modalRide}
+              userId={userId}
+              seats={bookSeats}
+              pending={pending}
+              onSeatsChange={setBookSeats}
+              onReview={() => {
+                setFeedback(null);
+                setModal({ kind: "review", rideId: modalRide.id });
+              }}
+              onBooking={(id) => setModal({ kind: "ticket", bookingId: id })}
+            />
+          }
         >
           <div className="detail-host">
             <span className="avatar avatar-0">{initials(modalRide.host)}</span>
@@ -706,143 +837,7 @@ export default function CommuteApp() {
               </div>
             )}
           </div>
-          {(() => {
-            const existing = state.bookings.find(
-                (b) =>
-                  b.rideId === modalRide.id &&
-                  b.userId === userId &&
-                  b.status === "confirmed",
-              ),
-              canBook =
-                modalRide.status === "open" &&
-                new Date(modalRide.departure).getTime() > Date.now() &&
-                !existing &&
-                modalRide.ownerId !== userId &&
-                availableSeats(state, modalRide) > 0;
-            const seats = canBook
-                ? Math.min(bookSeats, availableSeats(state, modalRide))
-                : 0,
-              people = 1 + passengerSeats(state, modalRide) + seats;
-            return (
-              <>
-                {canBook && (
-                  <label className="detail-seats">
-                    Seats to book
-                    <select
-                      aria-label="Seats to book"
-                      value={seats}
-                      onChange={(e) => setBookSeats(Number(e.target.value))}
-                    >
-                      {Array.from(
-                        { length: availableSeats(state, modalRide) },
-                        (_, i) => (
-                          <option key={i} value={i + 1}>
-                            {i + 1} {i === 0 ? "seat" : "seats"}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                    <span>{availableSeats(state, modalRide)} available</span>
-                  </label>
-                )}
-                <div className="fare-breakdown">
-                  <h3>Simple, equal cost sharing</h3>
-                  <div>
-                    <span>Total journey cost</span>
-                    <strong>{money(modalRide.totalPaise)}</strong>
-                  </div>
-                  <div>
-                    <span>
-                      Travellers {canBook ? "after you join" : "currently"}
-                    </span>
-                    <strong>{people}, including the host</strong>
-                  </div>
-                  <div>
-                    <span>Each traveller’s share</span>
-                    <strong>
-                      {money(
-                        splitFare(modalRide.totalPaise, people).at(-1) ?? 0,
-                      )}
-                      {modalRide.totalPaise % people !== 0
-                        ? " – " +
-                          money(splitFare(modalRide.totalPaise, people)[0])
-                        : ""}
-                    </strong>
-                  </div>
-                  <div className="fare-total">
-                    <span>
-                      {existing ? "Your current share" : "Your estimated share"}
-                    </span>
-                    <strong>
-                      {money(
-                        existing
-                          ? bookingShare(state, modalRide, existing)
-                          : canBook
-                            ? quote(state, modalRide, seats)
-                            : modalRide.ownerId === userId
-                              ? splitFare(modalRide.totalPaise, people)[0]
-                              : 0,
-                      )}
-                    </strong>
-                  </div>
-                  <p>
-                    The cost is divided equally. It changes if travellers join
-                    or cancel. ShareCommute records cost shares; payment is
-                    arranged separately.
-                  </p>
-                </div>
-                {existing ? (
-                  <>
-                    <p className="confirmed-message">
-                      <Check size={18} />
-                      You have {existing.seats}{" "}
-                      {existing.seats === 1 ? "seat" : "seats"} on this ride.
-                    </p>
-                    <button
-                      className="button secondary full"
-                      onClick={() => {
-                        setView("rides");
-                        setRideTab("joined");
-                        close();
-                      }}
-                    >
-                      View in My rides
-                    </button>
-                  </>
-                ) : canBook ? (
-                  <button
-                    className="button primary full"
-                    disabled={pending}
-                    onClick={async () => {
-                      if (
-                        await commit(
-                          () =>
-                            api.book(modalRide.id, seats, crypto.randomUUID()),
-                          "Booking confirmed. Your seat is in My rides.",
-                        )
-                      ) {
-                        setView("rides");
-                        setRideTab("joined");
-                        close();
-                      }
-                    }}
-                  >
-                    <Check size={18} />
-                    Confirm booking
-                  </button>
-                ) : (
-                  <p className="inline-note">
-                    <Info size={16} />
-                    {modalRide.status === "cancelled"
-                      ? "This ride has been cancelled."
-                      : modalRide.ownerId === userId
-                        ? "You are the host of this ride."
-                        : "This ride has departed or has no seats left."}
-                  </p>
-                )}
-              </>
-            );
-          })()}
+
           {modalRide.ownerId !== userId && (
             <button
               className="text-button danger report-button"

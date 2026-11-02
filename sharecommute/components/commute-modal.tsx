@@ -7,12 +7,16 @@ export default function Modal({
   close,
   wide = false,
   errorMessage,
+  busy = false,
+  footer,
 }: {
   title: string;
   children: ReactNode;
   close: () => void;
   wide?: boolean;
   errorMessage?: string;
+  busy?: boolean;
+  footer?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -23,11 +27,14 @@ export default function Modal({
   return (
     <dialog
       ref={ref}
-      className={`modal ${wide ? "modal-wide" : ""}`}
+      className={`modal ${wide ? "modal-wide" : ""} ${footer ? "modal-with-footer" : ""}`}
       aria-label={title}
-      onCancel={close}
+      onCancel={(event) => {
+        if (busy) event.preventDefault();
+        else close();
+      }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) close();
+        if (!busy && e.target === e.currentTarget) close();
       }}
     >
       <div className="modal-head">
@@ -35,6 +42,7 @@ export default function Modal({
         <button
           className="icon-button"
           aria-label="Close dialog"
+          disabled={busy}
           onClick={close}
         >
           <X size={20} />
@@ -45,7 +53,14 @@ export default function Modal({
           {errorMessage}
         </p>
       )}
-      {children}
+      {footer ? (
+        <>
+          <div className="modal-scroll-body">{children}</div>
+          <div className="modal-fixed-footer">{footer}</div>
+        </>
+      ) : (
+        children
+      )}
     </dialog>
   );
 }

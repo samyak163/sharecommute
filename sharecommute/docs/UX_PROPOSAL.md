@@ -1,6 +1,6 @@
 # Final ShareCommute UI and UX proposal
 
-Prepared: 1 November 2026, Asia/Kolkata. Status: items 1 and 2 implemented and tested on desktop; item 3 selected next; items 4–7 remain proposals.
+Prepared: 1 November 2026, Asia/Kolkata. Status: items 1–3 implemented; items 1 and 2 tested in the desktop browser; item 3 has automated coverage and awaits its signed-in browser walkthrough; items 4–7 remain proposals.
 
 The user selected item 1 first and asked for implementation, behaviour checks and visual iteration until the result is polished enough for the mentor demonstration. Apply this same implement–test–refine standard to later selected items. Keep the current API/database working; do not begin other proposed features as part of this step.
 
@@ -23,6 +23,12 @@ A real sample reservation persisted after reload, and cancellation restored capa
 ## Recommended scope and order
 
 Item 2 validation: all 42 tests and the TypeScript/production build passed. Browser checks verified filtered comparisons, multi-seat repricing (₹75 lowest for two seats versus ₹90 on the next option), closest-departure changes when the requested time moved from 5:00 to 5:30 pm, no comparison badge for a single result, keyboard meeting-note disclosure without changing the selected route, and first-card visibility without horizontal overflow. The actual desktop screenshot is under ignored work/ux-2-ride-cards.png.
+
+## Item 3 validation
+
+Automated coverage is in `tests/booking-experience.test.mjs`: the review total uses current occupancy and the exact requested seat count; unauthenticated, self, past, cancelled, duplicate and stale-seat submissions are rejected with a stated reason; a booking is shown only when the server receipt matches the booking, account, ride and seat count; cancelled and past departures get their own ticket states; and the calendar file converts to UTC, escapes user text, folds at 75 octets and carries a 15-minute pre-departure alert. All 47 tests, TypeScript and the production build pass as reported in PROJECT_STATUS.md.
+
+The signed-in browser walkthrough is still outstanding. It needs a fresh college inbox code, then a real sample booking, reload, ticket inspection and calendar download. Do not describe that walkthrough as complete until it is recorded.
 
 | Order | Upgrade | Behaviour and value |
 | --- | --- | --- |

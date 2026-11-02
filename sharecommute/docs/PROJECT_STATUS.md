@@ -1,6 +1,6 @@
 # ShareCommute current status
 
-Updated: 1 November 2026, Asia/Kolkata.
+Updated: 2 November 2026, Asia/Kolkata.
 
 ## Current direction
 
@@ -16,6 +16,7 @@ Public GitHub repository: https://github.com/samyak163/sharecommute. The user au
 - Google Maps JavaScript API and Routes Library replace the schematic. Search results, ride details and the offer form show a road map with pickup/drop-off markers, calculated distance, estimated driving time, a fit-route control and key-free Google Maps directions links. Routing uses the existing seven Pune landmarks and driving estimates without live traffic. The key is configured only in ignored .env. In-flight requests and results are shared in a bounded five-minute memory cache; map failures leave booking available.
 - UX item 1 is complete: a compact desktop search panel, larger side-by-side ride list/map workspace, explicit card route-preview controls, visible selected-card state, sticky map, previous/next route navigation, and separate access to the existing ride-detail/booking dialog. Search options collapse after a valid submission. Unsubmitted edits are distinguished from the applied search. The new view uses scoped styles and small UI components; the API and database implementation were retained.
 - UX item 2 is complete: ride cards emphasize departure time, price for the selected seats, capacity and vehicle; meeting notes expand in place. Lowest-cost and closest-departure badges use the currently filtered results, selected seat count and preferred IST departure. Ties share labels, existing confirmed bookings are not ranked as new options, and a single alternative gets no comparative badge. No ratings or AI claims were added.
+- UX item 3 is implemented: a separate booking review step shows the amount for the exact requested seats against current occupancy, validates the server's booking receipt before claiming success, and opens a confirmed ticket with the server booking reference, route, pickup note, directions and a generated RFC 5545 calendar reminder. My rides opens the ticket for confirmed bookings; cancelled and past departures keep honest states. No backend contract or schema change was needed.
 - Server-authorised ride offers, seat reservations and cancellation, with database capacity protection and booking idempotency.
 - Fare splitting in integer paise and current cost allocations.
 - Weekday recurring offers, unique occurrences and schedule cancellation.
@@ -33,6 +34,8 @@ The Maps addition passes all 38 tests (including request deduplication, failure 
 
 UX item 1 was iterated and checked in the user's actual 855×668 desktop browser view. DOM geometry confirmed that both the first complete ride card and the map canvas fit in the initial viewport, with no horizontal overflow. A scrolled-list check kept the map at 18 px from the top and entirely within the viewport. Browser checks passed for pointer/keyboard preview, exactly one selected card, route synchronization, previous/next within filtered results, sorting without losing selection, pending versus applied search, advanced time/seat settings, rejected identical endpoints, empty results/reset and rapid selection changes. Two seats with a ±15 minute window returned the expected two sample rides and ₹90/₹75 quotes. A real one-seat sample booking was confirmed through the existing API, survived reload, and was cancelled; availability returned to two seats. The cancelled test history is deliberately retained. All 38 tests passed with localhost access, and the latest TypeScript/production build passed. Screenshots are under ignored work/ux-1-desktop.png. The user explicitly asked to skip phone testing; do not claim mobile QA for this polish pass.
 
+UX item 3 adds five focused tests in `tests/booking-experience.test.mjs` covering review totals against current occupancy, unauthenticated/self/past/cancelled/duplicate/stale-seat rejection, server-receipt validation, cancelled and past ticket states, and calendar generation with UTC conversion, escaping, 75-octet folding and a 15-minute alert. On 2 November 2026 all 47 tests, TypeScript and the Vite production build passed while the dev server was running. The signed-in browser walkthrough (real booking, reload, ticket and calendar download) has not been done yet because it needs a fresh college inbox code; do not report it as complete.
+
 ## Local operation
 
 Use `npm run dev` inside `sharecommute/`. The default frontend is `http://127.0.0.1:5173/` and API is `http://127.0.0.1:3001/`. The local database is `data/sharecommute.sqlite`. `npm run seed:samples` safely adds missing sample dates.
@@ -41,7 +44,7 @@ Local environment variables, database files, authentication secrets and temporar
 
 ## Remaining work
 
-- The user requested pushing the completed work, then any two remaining UX suggestions, step by step. Commit 8345a83 and its preceding authentication/Maps commits were pushed to GitHub and the remote SHA verified. Item 2 is now implemented and tested; item 3 (booking review, confirmed ticket and calendar download) is the next selected task. Items 4–7 remain proposed. Keep the browser visible and retain the desktop testing priority.
+- The user requested pushing the completed work, then any two remaining UX suggestions, step by step. Item 2 is implemented, tested and pushed. Item 3 is implemented with automated coverage and is being pushed with this change; its signed-in browser walkthrough (real booking, reload, ticket and calendar download) is still pending. Item 4 is the next unimplemented suggestion; items 4–7 remain proposed. Keep the browser visible and retain the desktop testing priority.
 - Use the repository README to clone and run the project. Further source changes can be committed locally and pushed to the GitHub origin.
 - Email setup and the real inbox-code sign-in test are complete. The local app is running on ports 5173/3001 and the in-app tab is signed in. Future sign-ins use a fresh code from the college inbox. The authorised test recipient and delivery receipt remain only in ignored work/. Do not replace the verified DNS records, edit other domains or restore local verification. Any valid @mitwpu.edu.in address is eligible under the same domain rule; real delivery was tested with the authorised inbox, and automated tests cover other college addresses and rejection of personal Gmail addresses.
 - Finish manual review of admin screens. The current local sample booking/reload/cancellation walkthrough passed during UX item 1.
